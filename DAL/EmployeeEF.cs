@@ -159,7 +159,7 @@ public class EmployeeEF
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            var employee = context.Employees.Find(email);
+            var employee = context.Employees.FirstOrDefault(e => e.Email == email);
             return employee;
         }
     }
@@ -169,10 +169,7 @@ public class EmployeeEF
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            // Tìm employee bằng khóa chính là Email
-            var employee = context.Employees.Find(email);
-
-            // Trả về Email nếu tìm thấy, ngược lại trả về null
+            var employee = context.Employees.FirstOrDefault(e => e.Email == email);
             return employee?.Email;
         }
     }

@@ -23,6 +23,7 @@ namespace CompanyHRManagement
         public Nullable<int> OvertimeHours { get; set; }
         public Nullable<int> SalaryMonth { get; set; }
         public Nullable<int> SalaryYear { get; set; }
+        public virtual Employee Employee { get; set; }
         public string FullName { get; set; }
 
         public decimal TotalSalary

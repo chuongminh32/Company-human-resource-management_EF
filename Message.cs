@@ -20,6 +20,9 @@ namespace CompanyHRManagement
         public int ReceiverID { get; set; }
         public string Content { get; set; }
         public Nullable<System.DateTime> SentAt { get; set; }
+
+        public virtual Employee Employee { get; set; }
+        public virtual Employee Employee1 { get; set; }
         //// Thêm thuộc tính này để hiển thị tên người gửi
         //public string SenderName { get; set; }
         //// dùng cho tin nhắn đã gửi
