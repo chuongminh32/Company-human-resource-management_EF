@@ -18,7 +18,7 @@ namespace CompanyHRManagement.DAL._ado
             using (var context = new CompanyHRManagementEntities())
             {
                 return context.Leaves
-                    .Where(l => l.EmployeeID == EmployeeID)
+                    .Where(l => l.employeeID == EmployeeID)
                     .ToList();
             }
         }
@@ -29,10 +29,10 @@ namespace CompanyHRManagement.DAL._ado
             {
                 var leave = new Leaf
                 {
-                    EmployeeID = EmployeeID,
-                    StartDate = StartDate,
-                    EndDate = EndDate,
-                    Reason = Reason
+                    employeeID = EmployeeID,
+                    startDate = StartDate,
+                    endDate = EndDate,
+                    reason = Reason
                     // Không set `Status` nếu cột đó dùng DEFAULT trong CSDL
                 };
 
@@ -45,7 +45,7 @@ namespace CompanyHRManagement.DAL._ado
         {
             using (var context = new CompanyHRManagementEntities())
             {
-                var leave = context.Leaves.FirstOrDefault(l => l.LeaveID == LeaveID);
+                var leave = context.Leaves.FirstOrDefault(l => l.leaveID == LeaveID);
                 if (leave != null)
                 {
                     context.Leaves.Remove(leave);
@@ -59,13 +59,13 @@ namespace CompanyHRManagement.DAL._ado
             using (var context = new CompanyHRManagementEntities())
             {
                 // Tìm bản ghi nghỉ phép cần cập nhật theo LeaveID
-                var existingLeave = context.Leaves.FirstOrDefault(l => l.LeaveID == leave.LeaveID);
+                var existingLeave = context.Leaves.FirstOrDefault(l => l.leaveID == leave.leaveID);
                 if (existingLeave != null)
                 {
                     // Cập nhật các thuộc tính
-                    existingLeave.Reason = leave.Reason;
-                    existingLeave.StartDate = leave.StartDate;
-                    existingLeave.EndDate = leave.EndDate;
+                    existingLeave.reason = leave.reason;
+                    existingLeave.startDate = leave.startDate;
+                    existingLeave.endDate = leave.endDate;
 
                     // Lưu thay đổi vào cơ sở dữ liệu
                     return context.SaveChanges() > 0;
@@ -88,15 +88,15 @@ namespace CompanyHRManagement.DAL._ado
         {
             CompanyHRManagementEntities x = new CompanyHRManagementEntities();
             var query = from leaf in x.Leaves
-                        join employee in x.Employees on leaf.EmployeeID equals employee.EmployeeID
+                        join employee in x.Employees on leaf.employeeID equals employee.EmployeeID
                         select new
                         {
-                            leaf.LeaveID,
-                            leaf.EmployeeID,
+                            leaf.leaveID,
+                            leaf.employeeID,
                             EmployeeName = employee.FullName,
-                            leaf.StartDate,
-                            leaf.EndDate,
-                            leaf.Reason,
+                            leaf.startDate,
+                            leaf.endDate,
+                            leaf.reason,
                             leaf.status
                         };
             DataTable dt = new DataTable();
@@ -110,7 +110,7 @@ namespace CompanyHRManagement.DAL._ado
 
             foreach (var p in query)
             {
-                dt.Rows.Add(p.LeaveID, p.EmployeeID, p.StartDate, p.EndDate, p.Reason, p.status);
+                dt.Rows.Add(p.leaveID, p.employeeID,p.EmployeeName, p.startDate, p.endDate, p.reason, p.status);
             }
             return dt;
         }
@@ -119,7 +119,7 @@ namespace CompanyHRManagement.DAL._ado
         {
             CompanyHRManagementEntities x = new CompanyHRManagementEntities();
             Leaf a = new Leaf();
-            a.LeaveID = LeaveID;
+            a.leaveID = LeaveID;
             x.Leaves.Attach(a);
             x.Leaves.Remove(a);
             x.SaveChanges();
