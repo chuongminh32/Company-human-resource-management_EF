@@ -183,7 +183,7 @@ namespace CompanyHRManagement.GUI.admin
                 IsFired = txtIsFired.Text == "1",
                 Password = txtPassword.Text
             };
-            if (dbEm.InsertEmployee(emp))
+            if (dbEm.InsertEmployee(emp, ref err))
             {
                 MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadData();
