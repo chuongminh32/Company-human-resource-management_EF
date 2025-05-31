@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿// T4 code generation is enabled for model 'D:\LAPTRINHWINDOW\Company-human-resource-management_EF\CompanyHR_Model.edmx'. 
+=======
+﻿// T4 code generation is enabled for model 'G:\NamII_HK2\EF_2_Thuy\Company-human-resource-management\Company-human-resource-management\CompanyHR_Model.edmx'. 
+>>>>>>> 2b7e1be9382aa2845dc4445ba8581e6cbe5f9ac3
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.

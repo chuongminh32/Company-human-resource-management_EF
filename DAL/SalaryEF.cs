@@ -7,7 +7,6 @@ using CompanyHRManagement.DTO;
 
 public class SalaryEF
 {
-    DBConnection db = new DBConnection();
     public decimal TinhTongLuongTheoThangNam(int employeeId, int month, int year)
     {
         using (var context = new CompanyHRManagementEntities()) // hoặc tên DbContext của bạn

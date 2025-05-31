@@ -23,6 +23,7 @@ namespace CompanyHRManagement
             this.Messages1 = new HashSet<Message>();
             this.Rewards = new HashSet<Reward>();
             this.Salaries = new HashSet<Salary>();
+            this.Leaves = new HashSet<Leaf>();
         }
     
         public int EmployeeID { get; set; }
@@ -53,5 +54,7 @@ namespace CompanyHRManagement
         public virtual ICollection<Reward> Rewards { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Salary> Salaries { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Leaf> Leaves { get; set; }
     }
 }

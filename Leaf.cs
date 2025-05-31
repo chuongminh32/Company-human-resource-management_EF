@@ -20,5 +20,7 @@ namespace CompanyHRManagement
         public Nullable<System.DateTime> endDate { get; set; }
         public string reason { get; set; }
         public string status { get; set; }
+    
+        public virtual Employee Employee { get; set; }
     }
 }

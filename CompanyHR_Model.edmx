@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="CompanyHRManagementModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="CompanyHRManagementModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Attendance">
           <Key>
             <PropertyRef Name="AttendanceID" />
@@ -115,18 +115,6 @@
           <Property Name="version" Type="int" />
           <Property Name="definition" Type="varbinary(max)" />
         </EntityType>
-        <EntityType Name="Users">
-          <Key>
-            <PropertyRef Name="UserID" />
-          </Key>
-          <Property Name="UserID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="PasswordHash" Type="nvarchar" MaxLength="255" Nullable="false" />
-          <Property Name="FullName" Type="nvarchar" MaxLength="100" Nullable="false" />
-          <Property Name="Role" Type="nvarchar" MaxLength="20" Nullable="false" />
-          <Property Name="CreatedAt" Type="datetime" />
-          <Property Name="IsActive" Type="bit" />
-        </EntityType>
         <Association Name="FK__Attendanc__Emplo__46E78A0C">
           <End Role="Employees" Type="Self.Employees" Multiplicity="0..1" />
           <End Role="Attendance" Type="Self.Attendance" Multiplicity="*" />
@@ -223,6 +211,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Leaves_Employees">
+          <End Role="Employees" Type="Self.Employees" Multiplicity="0..1" />
+          <End Role="Leaves" Type="Self.Leaves" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employees">
+              <PropertyRef Name="EmployeeID" />
+            </Principal>
+            <Dependent Role="Leaves">
+              <PropertyRef Name="employeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <EntityContainer Name="CompanyHRManagementModelStoreContainer">
           <EntitySet Name="Attendance" EntityType="Self.Attendance" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Departments" EntityType="Self.Departments" Schema="dbo" store:Type="Tables" />
@@ -234,7 +234,6 @@
           <EntitySet Name="Rewards" EntityType="Self.Rewards" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Salaries" EntityType="Self.Salaries" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagrams" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK__Attendanc__Emplo__46E78A0C" Association="Self.FK__Attendanc__Emplo__46E78A0C">
             <End Role="Employees" EntitySet="Employees" />
             <End Role="Attendance" EntitySet="Attendance" />
@@ -267,9 +266,12 @@
             <End Role="Employees" EntitySet="Employees" />
             <End Role="Salaries" EntitySet="Salaries" />
           </AssociationSet>
+          <AssociationSet Name="FK_Leaves_Employees" Association="Self.FK_Leaves_Employees">
+            <End Role="Employees" EntitySet="Employees" />
+            <End Role="Leaves" EntitySet="Leaves" />
+          </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="CompanyHRManagementModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -330,6 +332,7 @@
           <NavigationProperty Name="Messages1" Relationship="Self.FK__Messages__Sender__6A30C649" FromRole="Employees" ToRole="Messages" />
           <NavigationProperty Name="Rewards" Relationship="Self.FK__Rewards__Employe__49C3F6B7" FromRole="Employees" ToRole="Rewards" />
           <NavigationProperty Name="Salaries" Relationship="Self.FK__Salaries__Employ__440B1D61" FromRole="Employees" ToRole="Salaries" />
+          <NavigationProperty Name="Leaves" Relationship="CompanyHRManagementModel.FK_Leaves_Employees" FromRole="Employee" ToRole="Leaf" />
         </EntityType>
         <EntityType Name="Leaf">
           <Key>
@@ -341,6 +344,7 @@
           <Property Name="endDate" Type="DateTime" Precision="0" />
           <Property Name="reason" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
           <Property Name="status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="CompanyHRManagementModel.FK_Leaves_Employees" FromRole="Leaf" ToRole="Employee" />
         </EntityType>
         <EntityType Name="Message">
           <Key>
@@ -398,18 +402,6 @@
           <Property Name="diagram_id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="version" Type="Int32" />
           <Property Name="definition" Type="Binary" MaxLength="Max" FixedLength="false" />
-        </EntityType>
-        <EntityType Name="User">
-          <Key>
-            <PropertyRef Name="UserID" />
-          </Key>
-          <Property Name="UserID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Username" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="PasswordHash" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="FullName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Role" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="CreatedAt" Type="DateTime" Precision="3" />
-          <Property Name="IsActive" Type="Boolean" />
         </EntityType>
         <Association Name="FK__Attendanc__Emplo__46E78A0C">
           <End Role="Employees" Type="Self.Employee" Multiplicity="0..1" />
@@ -518,7 +510,6 @@
           <EntitySet Name="Rewards" EntityType="Self.Reward" />
           <EntitySet Name="Salaries" EntityType="Self.Salary" />
           <EntitySet Name="sysdiagrams" EntityType="Self.sysdiagram" />
-          <EntitySet Name="Users" EntityType="Self.User" />
           <AssociationSet Name="FK__Attendanc__Emplo__46E78A0C" Association="Self.FK__Attendanc__Emplo__46E78A0C">
             <End Role="Employees" EntitySet="Employees" />
             <End Role="Attendance" EntitySet="Attendances" />
@@ -551,7 +542,23 @@
             <End Role="Employees" EntitySet="Employees" />
             <End Role="Salaries" EntitySet="Salaries" />
           </AssociationSet>
+          <AssociationSet Name="FK_Leaves_Employees" Association="CompanyHRManagementModel.FK_Leaves_Employees">
+            <End Role="Employee" EntitySet="Employees" />
+            <End Role="Leaf" EntitySet="Leaves" />
+          </AssociationSet>
         </EntityContainer>
+        <Association Name="FK_Leaves_Employees">
+          <End Type="CompanyHRManagementModel.Employee" Role="Employee" Multiplicity="0..1" />
+          <End Type="CompanyHRManagementModel.Leaf" Role="Leaf" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="EmployeeID" />
+            </Principal>
+            <Dependent Role="Leaf">
+              <PropertyRef Name="employeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -678,19 +685,6 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="Users">
-            <EntityTypeMapping TypeName="CompanyHRManagementModel.User">
-              <MappingFragment StoreEntitySet="Users">
-                <ScalarProperty Name="UserID" ColumnName="UserID" />
-                <ScalarProperty Name="Username" ColumnName="Username" />
-                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
-                <ScalarProperty Name="FullName" ColumnName="FullName" />
-                <ScalarProperty Name="Role" ColumnName="Role" />
-                <ScalarProperty Name="CreatedAt" ColumnName="CreatedAt" />
-                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
@@ -705,7 +699,7 @@
     <Options>
       <DesignerInfoPropertySet>
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
-        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
         <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
         <DesignerProperty Name="UseLegacyProvider" Value="false" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
