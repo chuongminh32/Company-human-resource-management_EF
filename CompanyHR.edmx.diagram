@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="0c8a6f65f4c943cbbb873e93ec131433" Name="Diagram1">
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Attendance" Width="1.5" PointX="5.25" PointY="1.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Department" Width="1.5" PointX="0.75" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Discipline" Width="1.5" PointX="5.25" PointY="5" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Employee" Width="1.5" PointX="3" PointY="8.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Insurance" Width="1.5" PointX="5.25" PointY="8" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Leaf" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Message" Width="1.5" PointX="5.25" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Parameter" Width="1.5" PointX="0.75" PointY="3.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Position" Width="1.5" PointX="0.75" PointY="6.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Reward" Width="1.5" PointX="5.25" PointY="14" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.Salary" Width="1.5" PointX="5.25" PointY="16.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.sysdiagram" Width="1.5" PointX="7.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="CompanyHRManagementModel.User" Width="1.5" PointX="7.75" PointY="3.75" IsExpanded="true" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Attendanc__Emplo__46E78A0C" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Employees__Depar__3C69FB99" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Disciplin__Emplo__4CA06362" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Employees__Posit__3D5E1FD2" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Insurance__Emplo__4F7CD00D" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Messages__Receiv__6B24EA82" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Messages__Sender__6A30C649" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Rewards__Employe__49C3F6B7" ManuallyRouted="false" />
+        <AssociationConnector Association="CompanyHRManagementModel.FK__Salaries__Employ__440B1D61" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
