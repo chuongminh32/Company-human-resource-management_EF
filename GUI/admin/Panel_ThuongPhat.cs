@@ -4,7 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
-
+using CompanyHRManagement.DTO;
 namespace CompanyHRManagement.GUI.admin
 {
     public partial class Panel_ThuongPhat : UserControl
@@ -22,7 +22,7 @@ namespace CompanyHRManagement.GUI.admin
             LoadDGVPhat(_disciplineBUS.LayDanhSachPhat());
 
         }
-        private void LoadDGVThuong(List<Reward> danhSachThuong)
+        private void LoadDGVThuong(List<RewardDTO> danhSachThuong)
         {
             try
             {
@@ -47,7 +47,7 @@ namespace CompanyHRManagement.GUI.admin
             }
         }
 
-        private void LoadDGVPhat(List<Discipline> danhSachPhat)
+        private void LoadDGVPhat(List<DisciplineDTO> danhSachPhat)
         {
             try
             {

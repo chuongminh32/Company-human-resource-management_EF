@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using CompanyHRManagement;
+using CompanyHRManagement.DTO;
 public class DisciplineBUS
 {
     private DisciplineEF disciplineDAO = new DisciplineEF();
@@ -11,12 +12,12 @@ public class DisciplineBUS
         return disciplineDAO.GetDisciplinesByEmployeeId(employeeId);
     }
 
-    public List<Discipline> LayDanhSachPhat()
+    public List<DisciplineDTO> LayDanhSachPhat()
     {
         return disciplineDAO.GetDisciplinesWithEmployeeName();
     }
 
-    public List<Discipline> TimKiemPhat(
+    public List<DisciplineDTO> TimKiemPhat(
         string disciplineID, string fullName, string reason,
         string day, string month, string year, string amount)
     {

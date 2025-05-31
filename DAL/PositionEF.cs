@@ -10,126 +10,103 @@ namespace CompanyHRManagement.DAL._ado
 {
     public class PositionEF
     {
-        DBConnection db = new DBConnection();
+        private CompanyHRManagementEntities context = new CompanyHRManagementEntities();
 
-        // Lấy tên vai  trò theo ID 
+        // Lấy tên vai trò theo ID 
         public string GetPositionNameById(int positionId)
         {
-            string positionName = string.Empty;
-            string query = "SELECT PositionName FROM Positions WHERE PositionID = @PositionID";
-            using (SqlConnection conn = DBConnection.GetConnection())
-            {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@PositionID", positionId);
-                    object result = cmd.ExecuteScalar();
-                    if (result != null)
-                    {
-                        positionName = result.ToString();
-                    }
-                }
-            }
-            return positionName;
+            var position = context.Positions
+                                  .FirstOrDefault(p => p.PositionID == positionId);
+            return position?.PositionName ?? string.Empty;
         }
 
-        //Lấy danh sách tên trả vào comboBox
+        // Lấy danh sách tên vị trí (dùng cho ComboBox)
         public List<string> GetPositionNames()
         {
-            List<string> position = new List<string>();
-
-            string query = "SELECT PositionName FROM Positions";
-
-            using (SqlConnection conn = DBConnection.GetConnection())
-            {
-                conn.Open();
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            position.Add(reader.GetString(0));
-                        }
-                    }
-                }
-            }
-
-            return position;
+            return context.Positions
+                          .Select(p => p.PositionName)
+                          .ToList();
         }
 
+        // Lấy danh sách tất cả các vị trí
         public List<Position> GetAllPositions()
         {
-            List<Position> positions = new List<Position>();
-
-            string query = "SELECT PositionID, PositionName, BaseSalary FROM Positions";
-            SqlDataReader reader = DBConnection.ExecuteReader(query);
-
-            while (reader.Read())
-            {
-                Position pos = new Position
-                {
-                    PositionID = reader.GetInt32(0),
-                    PositionName = reader.GetString(1),
-                    BaseSalary = reader.GetDecimal(2)
-                };
-                positions.Add(pos);
-            }
-
-            reader.Close(); // Đảm bảo đóng reader (vì connection đóng theo reader)
-            return positions;
+            return context.Positions.ToList();
         }
 
-
+        // Thêm vị trí mới
         public bool InsertPosition(string name, decimal baseSalary, ref string error)
         {
-            string query = "INSERT INTO Positions (PositionName, BaseSalary) VALUES (@name, @salary)";
-            SqlParameter[] parameters = {
-        new SqlParameter("@name", name),
-        new SqlParameter("@salary", baseSalary)
-    };
-
-            return db.MyExecuteNonQuery(query, CommandType.Text, ref error, parameters);
-        }
-
-        public bool UpdatePosition(int id, string name, decimal baseSalary, ref string error)
-        {
-            string query = "UPDATE Positions SET PositionName = @name, BaseSalary = @salary WHERE PositionID = @id";
-            SqlParameter[] parameters = {
-        new SqlParameter("@id", id),
-        new SqlParameter("@name", name),
-        new SqlParameter("@salary", baseSalary)
-    };
-
-            return db.MyExecuteNonQuery(query, CommandType.Text, ref error, parameters);
-        }
-
-        public bool DeletePosition(int id, ref string error)
-        {
-            // Bước 1: Kiểm tra có nhân viên nào giữ chức vụ này không
-            string checkQuery = "SELECT COUNT(*) FROM Employees WHERE PositionID = @id";
-            SqlParameter[] checkParams = {
-        new SqlParameter("@id", id)
-    };
-
-            object result = DBConnection.ExecuteScalar(checkQuery, checkParams);
-            int employeeCount = Convert.ToInt32(result);
-
-            if (employeeCount > 0)
+            try
             {
-                error = "Không thể xóa chức vụ này vì vẫn còn nhân viên đang giữ chức vụ này.";
+                var newPos = new Position
+                {
+                    PositionName = name,
+                    BaseSalary = baseSalary
+                };
+                context.Positions.Add(newPos);
+                context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
                 return false;
             }
-
-            // Bước 2: Xóa nếu không có nhân viên nào liên quan
-            string deleteQuery = "DELETE FROM Positions WHERE PositionID = @id";
-            SqlParameter[] deleteParams = {
-        new SqlParameter("@id", id)
-    };
-
-            return db.MyExecuteNonQuery(deleteQuery, CommandType.Text, ref error, deleteParams);
         }
 
+        // Cập nhật vị trí
+        public bool UpdatePosition(int id, string name, decimal baseSalary, ref string error)
+        {
+            try
+            {
+                var pos = context.Positions.FirstOrDefault(p => p.PositionID == id);
+                if (pos == null)
+                {
+                    error = "Không tìm thấy chức vụ.";
+                    return false;
+                }
 
+                pos.PositionName = name;
+                pos.BaseSalary = baseSalary;
+                context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        // Xóa vị trí nếu không có nhân viên đang giữ
+        public bool DeletePosition(int id, ref string error)
+        {
+            try
+            {
+                var position = context.Positions.FirstOrDefault(p => p.PositionID == id);
+                if (position == null)
+                {
+                    error = "Không tìm thấy chức vụ.";
+                    return false;
+                }
+
+                bool hasEmployees = context.Employees.Any(e => e.PositionID == id);
+                if (hasEmployees)
+                {
+                    error = "Không thể xóa chức vụ này vì vẫn còn nhân viên đang giữ chức vụ này.";
+                    return false;
+                }
+
+                context.Positions.Remove(position);
+                context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
     }
 }
