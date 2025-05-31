@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using CompanyHRManagement.BUS._ado;
 using Guna.UI2.WinForms;
 using iTextSharp.text;
+using CompanyHRManagement.DTO;
 
 namespace CompanyHRManagement.GUI.admin
 {
@@ -32,7 +33,7 @@ namespace CompanyHRManagement.GUI.admin
         private void LoadData()
         {
             LoadSalariesData();
-            LoadDGV(_salaryBUS.LayTatCaThongTinLuong_Admin());
+            LoadDGV(_salaryBUS.LayThongTinLuong_Admin());
             LoadDepartmentsToCB();
             LoadPositionsToCB();
             LoadYearToCB();
@@ -72,7 +73,7 @@ namespace CompanyHRManagement.GUI.admin
             txtOvertimeHours.Enabled = true;
             txtPenalty.Enabled = true;
         }
-        private void LoadDGV(List<Salary> danhSachLuong)
+        private void LoadDGV(List<SalaryDTO> danhSachLuong)
         {
             try
             {
@@ -163,12 +164,10 @@ namespace CompanyHRManagement.GUI.admin
 
         private void btnTim_Click(object sender, EventArgs e)
         {
-            LoadDGV(_salaryBUS.Loc_TimKiem(txtSalaryID.Text.ToString(),
-                txtFullName.Text.ToString(), txtBaseSalary.Text.ToString(),
-                txtAllowance.Text.ToString(), txtBonus.Text.ToString(),
-                txtPenalty.Text.ToString(), txtOvertimeHours.Text.ToString(),
-                cbMonth.Text.ToString(), cbYear.Text.ToString(),
-                cbPhong.Text.ToString(), cbChucVu.Text.ToString()));
+            LoadDGV(_salaryBUS.Loc_TimKiem(txtSalaryID.Text.Trim(), txtFullName.Text.Trim(),
+                txtBaseSalary.Text.Trim(), txtAllowance.Text.Trim(),txtBonus.Text.Trim(),
+                txtPenalty.Text.Trim(), txtOvertimeHours.Text.Trim(), cbMonth.Text.Trim(),
+                cbYear.Text.Trim(), cbPhong.Text.Trim(), cbChucVu.Text.Trim()));
         }
 
         private void btnThem_Click(object sender, EventArgs e)
@@ -503,7 +502,7 @@ namespace CompanyHRManagement.GUI.admin
         }
 
 
-        public List<Salary> SapXepDanhSach(List<Salary> list, string tieuChi, bool tangDan)
+        public List<SalaryDTO> SapXepDanhSach(List<SalaryDTO> list, string tieuChi, bool tangDan)
         {
             switch (tieuChi.Trim().ToLower())
             {
@@ -536,12 +535,12 @@ namespace CompanyHRManagement.GUI.admin
             string tieuChi = cbSapxep.SelectedItem?.ToString()?.Trim() ?? "ID";
 
             // Lấy danh sách hiện tại từ DataGridView
-            var dataSource = dgvLuong.DataSource as List<Salary>;
+            var dataSource = dgvLuong.DataSource as List<SalaryDTO>;
             if (dataSource == null || dataSource.Count == 0)
                 return;
 
             // Sắp xếp lại danh sách
-            List<Salary> danhSachSapXep = SapXepDanhSach(dataSource, tieuChi, tangdan);
+            List<SalaryDTO> danhSachSapXep = SapXepDanhSach(dataSource, tieuChi, tangdan);
 
             // Gán lại vào DataGridView
             dgvLuong.DataSource = null; // Xóa binding cũ để cập nhật binding mới

@@ -171,6 +171,7 @@
     <None Include="DTO\Readme.md" />
     <Compile Include="DTO\MesageReceive.cs" />
     <Compile Include="DTO\MessageSend.cs" />
+    <Compile Include="DTO\SalaryDTO.cs" />
     <Compile Include="Employee.cs">
       <DependentUpon>CompanyHR_Model.tt</DependentUpon>
     </Compile>

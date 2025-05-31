@@ -52,7 +52,7 @@ namespace CompanyHRManagement.DAL._ado
         // Phương thức dùng để tải danh sách các tin nhắn mới mà người nhận (receiver) đã nhận được
         // receiverId: ID của người nhận tin nhắn
         // Trả về danh sách các đối tượng Message chứa thông tin tên người gửi, nội dung và thời gian gửi
-        public List<MesageReceive> TaiBangNhanTinNhanMoi(int receiverId)
+        public List<DTO.Salary> TaiBangNhanTinNhanMoi(int receiverId)
         {
             // Tạo một context để kết nối tới cơ sở dữ liệu CompanyHRManagementEntities
             using (var context = new CompanyHRManagementEntities())
@@ -66,7 +66,7 @@ namespace CompanyHRManagement.DAL._ado
                                 join e in context.Employees on m.SenderID equals e.EmployeeID
                                 where m.ReceiverID == receiverId
                                 orderby m.SentAt descending
-                                select new MesageReceive
+                                select new DTO.Salary
                                 {
                                     SenderName = e.FullName, // Lấy tên đầy đủ của người gửi
                                     Content = m.Content,     // Nội dung tin nhắn

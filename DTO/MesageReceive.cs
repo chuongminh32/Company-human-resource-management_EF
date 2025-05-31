@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CompanyHRManagement.DTO
 {
-    class MesageReceive
+    class Salary
     {
         public string SenderName { get; set; }   // Tên người gửi
         public string Content { get; set; }      // Nội dung

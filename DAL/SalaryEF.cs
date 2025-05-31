@@ -1,190 +1,234 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Windows.Forms;
 using CompanyHRManagement;
+using CompanyHRManagement.DTO;
+
 public class SalaryEF
 {
     DBConnection db = new DBConnection();
     public decimal TinhTongLuongTheoThangNam(int employeeId, int month, int year)
     {
-        string query = @"
-    SELECT 
-        SUM(BaseSalary + Allowance + Bonus - Penalty + (OvertimeHours * 50000)) AS TotalSalary
-    FROM 
-        Salaries
-    WHERE 
-        EmployeeID = @EmployeeID AND SalaryMonth = @Month AND SalaryYear = @Year";
-
-        using (SqlConnection conn = DBConnection.GetConnection())
+        using (var context = new CompanyHRManagementEntities()) // hoặc tên DbContext của bạn
         {
-            SqlCommand cmd = new SqlCommand(query, conn);
-            cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
-            cmd.Parameters.AddWithValue("@Month", month);
-            cmd.Parameters.AddWithValue("@Year", year);
+            var total = context.Salaries
+                .Where(s => s.EmployeeID == employeeId && s.SalaryMonth == month && s.SalaryYear == year)
+                .Select(s => s.BaseSalary + s.Allowance + s.Bonus - s.Penalty + (s.OvertimeHours * 50000))
+                .DefaultIfEmpty(0)
+                .Sum();
 
-            conn.Open();
-            var result = cmd.ExecuteScalar();
-            return result != DBNull.Value ? Convert.ToDecimal(result) : 0;
+            return (decimal)total;
         }
     }
 
 
-    public List<Salary> LayThongTinLuongTheoID(int employeeId)
+    public List<CompanyHRManagement.Salary> LayThongTinLuongTheoID(int employeeId)
     {
-        List<Salary> list = new List<Salary>();
-        string query = @"
-        SELECT SalaryID, EmployeeID, BaseSalary, Allowance, Bonus, Penalty, 
-               OvertimeHours, SalaryMonth, SalaryYear
-        FROM Salaries
-        WHERE EmployeeID = @EmployeeID";
-
-        using (SqlConnection conn = DBConnection.GetConnection())
+        using (var context = new CompanyHRManagementEntities()) 
         {
-            conn.Open();
-            using (SqlCommand cmd = new SqlCommand(query, conn))
-            {
-                cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+            return context.Salaries
+                          .Where(s => s.EmployeeID == employeeId)
+                          .ToList();
+        }
+    }
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        Salary s = new Salary()
+    public List<SalaryDTO> LayTatCaThongTinLuong_Admin()
+    {
+        using (var context = new CompanyHRManagementEntities())
+        {
+            var list = (from s in context.Salaries
+                        join e in context.Employees on s.EmployeeID equals e.EmployeeID
+                        select new SalaryDTO
                         {
-                            SalaryID = reader.GetInt32(0),
-                            EmployeeID = reader.GetInt32(1),
-                            BaseSalary = reader.GetDecimal(2),
-                            Allowance = reader.GetDecimal(3),
-                            Bonus = reader.GetDecimal(4),
-                            Penalty = reader.GetDecimal(5),
-                            OvertimeHours = reader.GetInt32(6),
-                            SalaryMonth = reader.GetInt32(7),
-                            SalaryYear = reader.GetInt32(8)
-                        };
-                        list.Add(s);
-                    }
-                }
-            }
+                            SalaryID = s.SalaryID,
+                            EmployeeID = (int)s.EmployeeID,
+                            FullName = e.FullName,
+                            BaseSalary = (decimal)s.BaseSalary,
+                            Allowance = (decimal)s.Allowance,
+                            Bonus = (decimal)s.Bonus,
+                            Penalty = (decimal)s.Penalty,
+                            OvertimeHours = (int)s.OvertimeHours,
+                            SalaryMonth = (int)s.SalaryMonth,
+                            SalaryYear = (int)s.SalaryYear
+                        }).ToList();
+
+            return list;
         }
-
-        return list;
     }
-
-    public List<Salary> LayTatCaThongTinLuong_Admin()
+    public DataTable GetAllSalaries(int month, int year)
     {
-        List<Salary> list = new List<Salary>();
-        string query = @"
-        SELECT s.SalaryID, s.EmployeeID, e.FullName, s.BaseSalary, s.Allowance, s.Bonus,
-               s.Penalty, s.OvertimeHours, s.SalaryMonth, s.SalaryYear
-        FROM Salaries s
-        INNER JOIN Employees e ON s.EmployeeID = e.EmployeeID";
-
-        using (SqlDataReader reader = DBConnection.ExecuteReader(query))
+        using (var context = new CompanyHRManagementEntities())
         {
-            while (reader.Read())
-            {
-                Salary s = new Salary()
-                {
-                    SalaryID = reader.GetInt32(0),
-                    EmployeeID = reader.GetInt32(1),
-                    FullName = reader.GetString(2),
-                    BaseSalary = reader.GetDecimal(3),
-                    Allowance = reader.GetDecimal(4),
-                    Bonus = reader.GetDecimal(5),
-                    Penalty = reader.GetDecimal(6),
-                    OvertimeHours = reader.GetInt32(7),
-                    SalaryMonth = reader.GetInt32(8),
-                    SalaryYear = reader.GetInt32(9)
-                };
-                list.Add(s);
-            }
+            var query = from e in context.Employees
+                        where e.IsFired == false
+                        join s in context.Salaries
+                        .Where(s => s.SalaryMonth == month && s.SalaryYear == year)
+                        on e.EmployeeID equals s.EmployeeID into salGroup
+                        from sal in salGroup.DefaultIfEmpty()
+                        select new SalaryDTO
+                        {
+                            SalaryID = sal != null ? sal.SalaryID : 0,
+                            EmployeeID = e.EmployeeID,
+                            FullName = e.FullName,
+                            SalaryMonth = (int)(sal != null ? sal.SalaryMonth : month),
+                            SalaryYear = (int)(sal != null ? sal.SalaryYear : year),
+                            BaseSalary = (int)(sal != null ? sal.BaseSalary : 0),
+                            Allowance = (decimal)(sal != null ? sal.Allowance : 0),
+                            Bonus = (decimal)(sal != null ? sal.Bonus : 0),
+                            Penalty = (decimal)(sal != null ? sal.Penalty : 0),
+                            OvertimeHours = (int)(sal != null ? sal.OvertimeHours : 0),
+                        };
+
+            var list = query.ToList();
+
+            // Chuyển List<SalaryDTO> sang DataTable
+            return ConvertToDataTable(list);
+        }
+    }
+
+    // Hàm tiện ích chuyển List<T> thành DataTable
+    private DataTable ConvertToDataTable<T>(List<T> items)
+    {
+        var dt = new DataTable(typeof(T).Name);
+
+        // Lấy tất cả properties của T
+        var props = typeof(T).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+        foreach (var prop in props)
+        {
+            // Thêm cột DataTable tương ứng
+            dt.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
         }
 
-        return list;
+        foreach (var item in items)
+        {
+            var values = new object[props.Length];
+            for (int i = 0; i < props.Length; i++)
+            {
+                values[i] = props[i].GetValue(item, null) ?? DBNull.Value;
+            }
+            dt.Rows.Add(values);
+        }
+
+        return dt;
     }
+
+
+
 
     //Cập nhật thông tin trong bảng lương theo các bảng
-    public bool UpdateSalaries(ref string error)
+    public bool UpdateSalaries()
     {
-        string updateQuery = @"
-        UPDATE S
-        SET 
-            BaseSalary = ISNULL(P.BaseSalary, 0),
-            Penalty = ISNULL(DP.TotalPenalty, 0),
-            Bonus = ISNULL(RW.TotalBonus, 0),
-            OvertimeHours = ISNULL(AT.TotalOvertime, 0)
-        FROM Salaries S
-        INNER JOIN Employees E ON S.EmployeeID = E.EmployeeID
-        LEFT JOIN Positions P ON E.PositionID = P.PositionID
+        string errorMessage = string.Empty;
 
-        LEFT JOIN (
-            SELECT EmployeeID, YEAR(DisciplineDate) AS SalaryYear, MONTH(DisciplineDate) AS SalaryMonth, SUM(Amount) AS TotalPenalty
-            FROM [dbo].[Disciplines]
-            GROUP BY EmployeeID, YEAR(DisciplineDate), MONTH(DisciplineDate)
-        ) DP ON S.EmployeeID = DP.EmployeeID AND S.SalaryYear = DP.SalaryYear AND S.SalaryMonth = DP.SalaryMonth
+        try
+        {
+            using (var context = new CompanyHRManagementEntities()) 
+            {
+                var salaries = context.Salaries.ToList();
 
-        LEFT JOIN (
-            SELECT EmployeeID, YEAR(RewardDate) AS SalaryYear, MONTH(RewardDate) AS SalaryMonth, SUM(Amount) AS TotalBonus
-            FROM [dbo].[Rewards]
-            GROUP BY EmployeeID, YEAR(RewardDate), MONTH(RewardDate)
-        ) RW ON S.EmployeeID = RW.EmployeeID AND S.SalaryYear = RW.SalaryYear AND S.SalaryMonth = RW.SalaryMonth
+                foreach (var salary in salaries)
+                {
+                    // Lấy base salary từ Position của nhân viên
 
-        LEFT JOIN (
-            SELECT EmployeeID, YEAR(WorkDate) AS SalaryYear, MONTH(WorkDate) AS SalaryMonth, SUM(OvertimeHours) AS TotalOvertime
-            FROM [dbo].[Attendance]
-            GROUP BY EmployeeID, YEAR(WorkDate), MONTH(WorkDate)
-        ) AT ON S.EmployeeID = AT.EmployeeID AND S.SalaryYear = AT.SalaryYear AND S.SalaryMonth = AT.SalaryMonth;
-    ";
+                    var employee = context.Employees
+                     .Include("Position")
+                     .FirstOrDefault(e => e.EmployeeID == salary.EmployeeID);
 
-        return db.MyExecuteNonQuery(updateQuery, CommandType.Text, ref error);
+
+                    salary.BaseSalary = employee?.Position?.BaseSalary ?? 0;
+
+                    // Tổng thưởng theo tháng/năm
+                    salary.Bonus = context.Rewards
+                        .Where(r => r.EmployeeID == salary.EmployeeID &&
+                                    r.RewardDate.Value.Year == salary.SalaryYear &&
+                                    r.RewardDate.Value.Month == salary.SalaryMonth)
+                        .Sum(r => (decimal?)r.Amount) ?? 0;
+
+                    // Tổng phạt theo tháng/năm
+                    salary.Penalty = context.Disciplines
+                        .Where(d => d.EmployeeID == salary.EmployeeID &&
+                                    d.DisciplineDate.Value.Year == salary.SalaryYear &&
+                                    d.DisciplineDate.Value.Month == salary.SalaryMonth)
+                        .Sum(d => (decimal?)d.Amount) ?? 0;
+
+                    // Tổng giờ làm thêm theo tháng/năm
+                    salary.OvertimeHours = context.Attendances
+                        .Where(a => a.EmployeeID == salary.EmployeeID &&
+                                    a.WorkDate.Value.Year == salary.SalaryYear &&
+                                    a.WorkDate.Value.Month == salary.SalaryMonth)
+                        .Sum(a => (int?)a.OvertimeHours) ?? 0;
+                }
+
+                context.SaveChanges();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            return false;
+        }
     }
+
+
     //Xóa các bản ghi trùng lặp
     public bool DeleteDuplicateSalariesKeepFirst()
     {
-        string query = @"
-        WITH CTE AS (
-            SELECT 
-                SalaryID,
-                ROW_NUMBER() OVER (PARTITION BY EmployeeID, SalaryMonth, SalaryYear ORDER BY SalaryID) AS rn
-            FROM Salaries
-        )
-        DELETE FROM CTE WHERE rn > 1;
-    ";
+        string errorMessage = string.Empty;
 
-        string error = "";
-        bool success = db.MyExecuteNonQuery(query, CommandType.Text, ref error);
-
-        if (!success)
+        try
         {
-            // Xử lý lỗi hoặc log
-            Console.WriteLine("Lỗi khi xóa bản ghi trùng: " + error);
-        }
+            using (var context = new CompanyHRManagementEntities()) // hoặc DbContext của bạn
+            {
+                // Nhóm theo EmployeeID, SalaryMonth, SalaryYear
+                var duplicates = context.Salaries
+                    .GroupBy(s => new { s.EmployeeID, s.SalaryMonth, s.SalaryYear })
+                    .Where(g => g.Count() > 1)
+                    .ToList();
 
-        return success;
+                foreach (var group in duplicates)
+                {
+                    // Giữ bản ghi đầu tiên (theo SalaryID nhỏ nhất), xóa các bản ghi còn lại
+                    var salariesToDelete = group
+                        .OrderBy(s => s.SalaryID)
+                        .Skip(1) // Bỏ qua bản ghi đầu tiên
+                        .ToList();
+
+                    context.Salaries.RemoveRange(salariesToDelete);
+                }
+
+                context.SaveChanges();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            return false;
+        }
     }
 
 
     //Trả về danh sách các năm có trong bảng
     public List<int> GetDistinctSalaryYears()
     {
-        List<int> years = new List<int>();
-        string query = "SELECT DISTINCT SalaryYear FROM Salaries ORDER BY SalaryYear DESC";
-
-        using (SqlDataReader reader = DBConnection.ExecuteReader(query))
+        using (var context = new CompanyHRManagementEntities())
         {
-            while (reader.Read())
-            {
-                years.Add(reader.GetInt32(0));
-            }
-        }
+            var distinctYears = context.Salaries
+                .Select(s => s.SalaryYear)       
+                .Where(y => y.HasValue)          
+                .Select(y => y.Value)             
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
 
-        return years;
+            return distinctYears;
+        }
     }
     //Hàm Lọc + Tìm kiếm
-    public List<Salary> SearchSalaries(
+    public List<SalaryDTO> SearchSalaries(
     int? salaryID,
     string fullName,
     decimal? baseSalary,
@@ -195,152 +239,133 @@ public class SalaryEF
     string salaryMonthStr,
     string salaryYearStr,
     string departmentName,
-    string positionName
-)
+    string positionName)
     {
-        List<Salary> list = new List<Salary>();
-
-        // Chuyển chuỗi tháng năm thành số, hoặc null nếu không hợp lệ hoặc là "Tất cả"
-        int? salaryMonth = null;
-        if (!string.IsNullOrEmpty(salaryMonthStr) && salaryMonthStr != "Tất cả")
+        using (var context = new CompanyHRManagementEntities())
         {
-            if (int.TryParse(salaryMonthStr, out int temp))
-                salaryMonth = temp;
+            int? salaryMonth = null;
+            if (!string.IsNullOrEmpty(salaryMonthStr) && salaryMonthStr != "Tất cả" && int.TryParse(salaryMonthStr, out int m))
+                salaryMonth = m;
+
+            int? salaryYear = null;
+            if (!string.IsNullOrEmpty(salaryYearStr) && salaryYearStr != "Tất cả" && int.TryParse(salaryYearStr, out int y))
+                salaryYear = y;
+
+            if (!string.IsNullOrEmpty(departmentName) && departmentName == "Tất cả")
+                departmentName = null;
+
+            if (!string.IsNullOrEmpty(positionName) && positionName == "Tất cả")
+                positionName = null;
+
+            var query = context.Salaries.AsQueryable();
+
+            if (salaryID.HasValue)
+                query = query.Where(s => s.SalaryID == salaryID.Value);
+
+            if (!string.IsNullOrEmpty(fullName))
+                query = query.Where(s => s.Employee.FullName.Contains(fullName));
+
+            if (baseSalary.HasValue)
+                query = query.Where(s => s.BaseSalary == baseSalary.Value);
+
+            if (allowance.HasValue)
+                query = query.Where(s => s.Allowance == allowance.Value);
+
+            if (bonus.HasValue)
+                query = query.Where(s => s.Bonus == bonus.Value);
+
+            if (penalty.HasValue)
+                query = query.Where(s => s.Penalty == penalty.Value);
+
+            if (overtimeHours.HasValue)
+                query = query.Where(s => s.OvertimeHours == overtimeHours.Value);
+
+            if (salaryMonth.HasValue)
+                query = query.Where(s => s.SalaryMonth == salaryMonth.Value);
+
+            if (salaryYear.HasValue)
+                query = query.Where(s => s.SalaryYear == salaryYear.Value);
+
+            if (!string.IsNullOrEmpty(departmentName))
+                query = query.Where(s => s.Employee.Department.DepartmentName.Contains(departmentName));
+
+            if (!string.IsNullOrEmpty(positionName))
+                query = query.Where(s => s.Employee.Position.PositionName.Contains(positionName));
+
+            var list = query
+                .Select(s => new SalaryDTO
+                {
+                    SalaryID = s.SalaryID,
+                    EmployeeID = (int)s.EmployeeID,
+                    FullName = s.Employee.FullName,
+                    BaseSalary = (decimal)s.BaseSalary,
+                    Allowance = (decimal)s.Allowance,
+                    Bonus = (decimal)s.Bonus,
+                    Penalty = (decimal)s.Penalty,
+                    OvertimeHours = (int)s.OvertimeHours,
+                    SalaryMonth = (int)s.SalaryMonth,
+                    SalaryYear = (int)s.SalaryYear
+                })
+                .ToList();
+
+            return list;
         }
-
-        int? salaryYear = null;
-        if (!string.IsNullOrEmpty(salaryYearStr) && salaryYearStr != "Tất cả")
-        {
-            if (int.TryParse(salaryYearStr, out int temp))
-                salaryYear = temp;
-        }
-
-        // Nếu là "Tất cả", bỏ qua lọc (truyền null)
-        if (!string.IsNullOrEmpty(departmentName) && departmentName == "Tất cả")
-        {
-            departmentName = null;
-        }
-
-        if (!string.IsNullOrEmpty(positionName) && positionName == "Tất cả")
-        {
-            positionName = null;
-        }
-
-        string query = @"
-    SELECT s.SalaryID, e.FullName, s.BaseSalary, s.Allowance, s.Bonus, 
-           s.Penalty, s.OvertimeHours, s.SalaryMonth, s.SalaryYear
-    FROM Salaries s
-    INNER JOIN Employees e ON s.EmployeeID = e.EmployeeID
-    INNER JOIN Departments d ON e.DepartmentID = d.DepartmentID
-    INNER JOIN Positions p ON e.PositionID = p.PositionID
-    WHERE (@SalaryID IS NULL OR s.SalaryID = @SalaryID)
-      AND (@FullName IS NULL OR e.FullName COLLATE SQL_Latin1_General_CP1_CI_AS LIKE '%' + @FullName + '%')
-      AND (@BaseSalary IS NULL OR s.BaseSalary = @BaseSalary)
-      AND (@Allowance IS NULL OR s.Allowance = @Allowance)
-      AND (@Bonus IS NULL OR s.Bonus = @Bonus)
-      AND (@Penalty IS NULL OR s.Penalty = @Penalty)
-      AND (@OvertimeHours IS NULL OR s.OvertimeHours = @OvertimeHours)
-      AND (@SalaryMonth IS NULL OR s.SalaryMonth = @SalaryMonth)
-      AND (@SalaryYear IS NULL OR s.SalaryYear = @SalaryYear)
-      AND (@DepartmentName IS NULL OR d.DepartmentName COLLATE SQL_Latin1_General_CP1_CI_AS LIKE '%' + @DepartmentName + '%')
-      AND (@PositionName IS NULL OR p.PositionName COLLATE SQL_Latin1_General_CP1_CI_AS LIKE '%' + @PositionName + '%')
-    ";
-
-        SqlParameter[] parameters = new SqlParameter[]
-        {
-        new SqlParameter("@SalaryID", SqlDbType.Int) { Value = salaryID.HasValue ? (object)salaryID.Value : DBNull.Value },
-        new SqlParameter("@FullName", SqlDbType.NVarChar, 100) { Value = string.IsNullOrEmpty(fullName) ? (object)DBNull.Value : fullName },
-        new SqlParameter("@BaseSalary", SqlDbType.Decimal) { Value = baseSalary.HasValue ? (object)baseSalary.Value : DBNull.Value },
-        new SqlParameter("@Allowance", SqlDbType.Decimal) { Value = allowance.HasValue ? (object)allowance.Value : DBNull.Value },
-        new SqlParameter("@Bonus", SqlDbType.Decimal) { Value = bonus.HasValue ? (object)bonus.Value : DBNull.Value },
-        new SqlParameter("@Penalty", SqlDbType.Decimal) { Value = penalty.HasValue ? (object)penalty.Value : DBNull.Value },
-        new SqlParameter("@OvertimeHours", SqlDbType.Int) { Value = overtimeHours.HasValue ? (object)overtimeHours.Value : DBNull.Value },
-        new SqlParameter("@SalaryMonth", SqlDbType.Int) { Value = salaryMonth.HasValue ? (object)salaryMonth.Value : DBNull.Value },
-        new SqlParameter("@SalaryYear", SqlDbType.Int) { Value = salaryYear.HasValue ? (object)salaryYear.Value : DBNull.Value },
-        new SqlParameter("@DepartmentName", SqlDbType.NVarChar, 100) { Value = string.IsNullOrEmpty(departmentName) ? (object)DBNull.Value : departmentName },
-        new SqlParameter("@PositionName", SqlDbType.NVarChar, 100) { Value = string.IsNullOrEmpty(positionName) ? (object)DBNull.Value : positionName }
-        };
-
-        using (SqlDataReader reader = DBConnection.ExecuteReader(query, parameters))
-        {
-            while (reader.Read())
-            {
-                Salary sal = new Salary();
-
-                sal.SalaryID = reader.GetInt32(reader.GetOrdinal("SalaryID"));
-                sal.FullName = reader.IsDBNull(reader.GetOrdinal("FullName")) ? "" : reader.GetString(reader.GetOrdinal("FullName"));
-                sal.BaseSalary = reader.IsDBNull(reader.GetOrdinal("BaseSalary")) ? 0 : reader.GetDecimal(reader.GetOrdinal("BaseSalary"));
-                sal.Allowance = reader.IsDBNull(reader.GetOrdinal("Allowance")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Allowance"));
-                sal.Bonus = reader.IsDBNull(reader.GetOrdinal("Bonus")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Bonus"));
-                sal.Penalty = reader.IsDBNull(reader.GetOrdinal("Penalty")) ? 0 : reader.GetDecimal(reader.GetOrdinal("Penalty"));
-                sal.OvertimeHours = reader.IsDBNull(reader.GetOrdinal("OvertimeHours")) ? 0 : reader.GetInt32(reader.GetOrdinal("OvertimeHours"));
-                sal.SalaryMonth = reader.IsDBNull(reader.GetOrdinal("SalaryMonth")) ? 0 : reader.GetInt32(reader.GetOrdinal("SalaryMonth"));
-                sal.SalaryYear = reader.IsDBNull(reader.GetOrdinal("SalaryYear")) ? 0 : reader.GetInt32(reader.GetOrdinal("SalaryYear"));
-
-                list.Add(sal);
-            }
-        }
-
-        return list;
     }
 
 
     public bool InsertSalary(string employeeName, int month, int year,
     decimal allowance, decimal bonus, decimal penalty, int overtimeHours, ref string error)
     {
-        // Lấy EmployeeID từ tên
-        string queryGetID = "SELECT EmployeeID FROM Employees WHERE FullName = @FullName";
-        SqlParameter[] paramGetID = {
-        new SqlParameter("@FullName", SqlDbType.NVarChar, 100) { Value = employeeName }
-    };
-
-        object result = DBConnection.ExecuteScalar(queryGetID, paramGetID);
-        if (result == null || result == DBNull.Value)
+        try
         {
-            error = "Tên nhân viên không tồn tại.";
+            using (var context = new CompanyHRManagementEntities())
+            {
+                // Lấy Employee theo tên
+                var employee = context.Employees
+                    .Include("Position")    // Include nhận string chứ không phải lambda
+                    .FirstOrDefault(e => e.FullName == employeeName);
+
+                if (employee == null)
+                {
+                    error = "Tên nhân viên không tồn tại.";
+                    return false;
+                }
+
+                if (employee.Position == null)
+                {
+                    error = "Nhân viên không có chức vụ hoặc không tìm thấy lương cơ bản.";
+                    return false;
+                }
+
+                decimal baseSalary = employee.Position.BaseSalary;
+
+                // Tạo đối tượng Salary mới
+                CompanyHRManagement.Salary newSalary = new CompanyHRManagement.Salary
+                {
+                    EmployeeID = employee.EmployeeID,
+                    BaseSalary = baseSalary,
+                    Allowance = allowance,
+                    Bonus = bonus,
+                    Penalty = penalty,
+                    OvertimeHours = overtimeHours,
+                    SalaryMonth = month,
+                    SalaryYear = year
+                };
+
+                // Thêm vào DbSet và lưu thay đổi
+                context.Salaries.Add(newSalary);
+                context.SaveChanges();
+
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
             return false;
         }
-
-        int employeeID = Convert.ToInt32(result);
-
-        // Lấy BaseSalary từ bảng Positions qua PositionID
-        string queryGetSalary = @"
-        SELECT P.BaseSalary
-        FROM Employees E
-        JOIN Positions P ON E.PositionID = P.PositionID
-        WHERE E.EmployeeID = @EmployeeID";
-
-        SqlParameter[] paramSalary = {
-        new SqlParameter("@EmployeeID", employeeID)
-    };
-
-        object baseSalaryResult = DBConnection.ExecuteScalar(queryGetSalary, paramSalary);
-        if (baseSalaryResult == null || baseSalaryResult == DBNull.Value)
-        {
-            error = "Không tìm thấy lương cơ bản từ chức vụ.";
-            return false;
-        }
-
-        decimal baseSalary = Convert.ToDecimal(baseSalaryResult);
-
-        // Chèn dữ liệu vào bảng Salaries
-        string queryInsert = @"
-        INSERT INTO Salaries (EmployeeID, BaseSalary, Allowance, Bonus, Penalty, OvertimeHours, SalaryMonth, SalaryYear)
-        VALUES (@EmployeeID, @BaseSalary, @Allowance, @Bonus, @Penalty, @OvertimeHours, @SalaryMonth, @SalaryYear)";
-
-        SqlParameter[] insertParams = {
-        new SqlParameter("@EmployeeID", employeeID),
-        new SqlParameter("@BaseSalary", baseSalary),
-        new SqlParameter("@Allowance", allowance),
-        new SqlParameter("@Bonus", bonus),
-        new SqlParameter("@Penalty", penalty),
-        new SqlParameter("@OvertimeHours", overtimeHours),
-        new SqlParameter("@SalaryMonth", month),
-        new SqlParameter("@SalaryYear", year)
-    };
-
-        return db.MyExecuteNonQuery(queryInsert, CommandType.Text, ref error, insertParams);
     }
+
 
     public bool DeleteSalariesByIDs(List<int> salaryIDs, ref string error)
     {
@@ -350,79 +375,71 @@ public class SalaryEF
             return false;
         }
 
-        string joinedIDs = string.Join(",", salaryIDs);
-        string query = $"DELETE FROM Salaries WHERE SalaryID IN ({joinedIDs})";
+        try
+        {
+            using (var context = new CompanyHRManagementEntities())
+            {
+                // Lấy các bản ghi Salary có trong danh sách ID
+                var salariesToDelete = context.Salaries
+                    .Where(s => salaryIDs.Contains(s.SalaryID))
+                    .ToList();
 
-        return db.MyExecuteNonQuery(query, CommandType.Text, ref error);
+                if (salariesToDelete.Count == 0)
+                {
+                    error = "Không tìm thấy bản ghi nào để xóa.";
+                    return false;
+                }
+
+                context.Salaries.RemoveRange(salariesToDelete);
+                context.SaveChanges();
+
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
     }
 
     public bool UpdateSalaryByID(int salaryID, string fullName, decimal allowance, int month, int year, ref string error)
     {
-        // Lấy EmployeeID từ FullName
-        string queryGetEmployeeID = "SELECT EmployeeID FROM Employees WHERE FullName = @FullName";
-        SqlParameter[] paramGetEmp = {
-        new SqlParameter("@FullName", SqlDbType.NVarChar, 100) { Value = fullName }
-    };
-        object empIDObj = DBConnection.ExecuteScalar(queryGetEmployeeID, paramGetEmp);
-
-        if (empIDObj == null || empIDObj == DBNull.Value)
+        try
         {
-            error = "Tên nhân viên không tồn tại.";
+            using (var context = new CompanyHRManagementEntities())
+            {
+                // Lấy Employee theo tên
+                var employee = context.Employees.FirstOrDefault(e => e.FullName == fullName);
+                if (employee == null)
+                {
+                    error = "Tên nhân viên không tồn tại.";
+                    return false;
+                }
+
+                // Lấy Salary cần update
+                var salary = context.Salaries.FirstOrDefault(s => s.SalaryID == salaryID);
+                if (salary == null)
+                {
+                    error = "Bảng lương không tồn tại.";
+                    return false;
+                }
+
+                // Cập nhật thông tin
+                salary.EmployeeID = employee.EmployeeID;
+                salary.Allowance = allowance;
+                salary.SalaryMonth = month;
+                salary.SalaryYear = year;
+
+                context.SaveChanges();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
             return false;
         }
-
-        int employeeID;
-        if (!int.TryParse(empIDObj.ToString(), out employeeID) || employeeID == 0)
-        {
-            error = "Tên nhân viên không hợp lệ.";
-            return false;
-        }
-
-        string updateQuery = @"
-        UPDATE Salaries
-        SET EmployeeID = @EmployeeID,
-            Allowance = @Allowance,
-            SalaryMonth = @SalaryMonth,
-            SalaryYear = @SalaryYear
-        WHERE SalaryID = @SalaryID";
-
-        SqlParameter[] parameters = {
-        new SqlParameter("@EmployeeID", employeeID),
-        new SqlParameter("@Allowance", allowance),
-        new SqlParameter("@SalaryMonth", month),
-        new SqlParameter("@SalaryYear", year),
-        new SqlParameter("@SalaryID", salaryID)
-    };
-
-        return db.MyExecuteNonQuery(updateQuery, CommandType.Text, ref error, parameters);
-    }
-
-    //Lấy lương của tháng này
-    public DataTable GetAllSalaries(int month, int year)
-    {
-        string query = $@"
-    SELECT
-        ISNULL(s.SalaryID, 0) AS SalaryID,
-        e.EmployeeID,
-        e.FullName,
-        ISNULL(s.SalaryMonth, {month}) AS SalaryMonth,
-        ISNULL(s.SalaryYear, {year}) AS SalaryYear,
-        ISNULL(s.BaseSalary, 0) AS BaseSalary,
-        ISNULL(s.Allowance, 0) AS Allowance,
-        ISNULL(s.Bonus, 0) AS Bonus,
-        ISNULL(s.Penalty, 0) AS Penalty,
-        ISNULL(s.OvertimeHours, 0) AS OvertimeHours,
-        (ISNULL(s.BaseSalary, 0) + ISNULL(s.Allowance, 0) + ISNULL(s.Bonus, 0) 
-         - ISNULL(s.Penalty, 0) + (ISNULL(s.OvertimeHours, 0) * 50000)) AS TotalSalary
-    FROM 
-        Employees e
-    LEFT JOIN 
-        Salaries s ON e.EmployeeID = s.EmployeeID AND s.SalaryMonth = {month} AND s.SalaryYear = {year}
-    WHERE 
-        e.isFired = 0";  // chưa nghỉ việc (false)
-
-        DataSet ds = db.ExecuteQueryDataSet(query, CommandType.Text);
-        return ds.Tables[0];
     }
 
 }

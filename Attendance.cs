@@ -11,7 +11,7 @@ namespace CompanyHRManagement
 {
     using System;
     using System.Collections.Generic;
-
+    
     public partial class Attendance
     {
         public int AttendanceID { get; set; }
@@ -21,10 +21,7 @@ namespace CompanyHRManagement
         public Nullable<System.TimeSpan> CheckOut { get; set; }
         public Nullable<int> OvertimeHours { get; set; }
         public string AbsenceStatus { get; set; }
-
+    
         public virtual Employee Employee { get; set; }
-
-        public string MonthYear { get; set; }
-        public int WorkDays { get; set; }
     }
 }

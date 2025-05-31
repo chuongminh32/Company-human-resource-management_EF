@@ -11,14 +11,14 @@ namespace CompanyHRManagement
 {
     using System;
     using System.Collections.Generic;
-
+    
     public partial class Leaf
     {
-        public int LeaveID { get; set; }
-        public Nullable<int> EmployeeID { get; set; }
-        public Nullable<System.DateTime> StartDate { get; set; }
-        public Nullable<System.DateTime> EndDate { get; set; }
-        public string Reason { get; set; }
+        public int leaveID { get; set; }
+        public Nullable<int> employeeID { get; set; }
+        public Nullable<System.DateTime> startDate { get; set; }
+        public Nullable<System.DateTime> endDate { get; set; }
+        public string reason { get; set; }
         public string status { get; set; }
     }
 }

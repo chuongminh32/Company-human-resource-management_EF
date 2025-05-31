@@ -17,7 +17,7 @@ namespace CompanyHRManagement.BUS._ado
         // Lấy bảng tin nhắn đã gửi của người dùng
         public List<MessageSend> TaiBangGuiTinNhan(int senderId) => m.TaiBangGuiTinNhan(senderId);
         // Lấy bảng tin nhắn đã nhận của người dùng
-        public List<MesageReceive> TaiBangNhanTinNhanMoi(int receiverId) => m.TaiBangNhanTinNhanMoi(receiverId);
+        public List<DTO.Salary> TaiBangNhanTinNhanMoi(int receiverId) => m.TaiBangNhanTinNhanMoi(receiverId);
 
         public bool GuiTin(int senderId, int receiverId, string content, ref string err)
         {

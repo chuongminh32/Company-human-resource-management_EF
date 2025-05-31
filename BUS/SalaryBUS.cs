@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Data;
 using CompanyHRManagement;
+using CompanyHRManagement.DTO;
 
 public class SalaryBUS
 {
     // SalaryBUS.cs
     private SalaryEF salaryDAO = new SalaryEF();
-    public List<Salary> LayLuongTheoNhanVien(int employeeId)
+    public List<CompanyHRManagement.Salary> LayLuongTheoNhanVien(int employeeId)
     {
         return salaryDAO.LayThongTinLuongTheoID(employeeId);
     }
@@ -17,21 +18,21 @@ public class SalaryBUS
         return salaryDAO.TinhTongLuongTheoThangNam(emID, month, year);
     }
 
-    public List<Salary> LayTatCaThongTinLuong_Admin()
+    public List<SalaryDTO> LayThongTinLuong_Admin()
     {
         return salaryDAO.LayTatCaThongTinLuong_Admin();
     }
 
     public bool TaiLaiDataLuong(ref string error)
     {
-        return salaryDAO.DeleteDuplicateSalariesKeepFirst() && salaryDAO.UpdateSalaries(ref error);
+        return salaryDAO.DeleteDuplicateSalariesKeepFirst() && salaryDAO.UpdateSalaries();
     }
 
     public List<int> LayDanhSachNam()
     {
         return salaryDAO.GetDistinctSalaryYears();
     }
-    public List<Salary> Loc_TimKiem(
+    public List<SalaryDTO> Loc_TimKiem(
     string salaryIDStr,
     string fullName,
     string baseSalaryStr,
