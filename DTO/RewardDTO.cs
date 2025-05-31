@@ -15,5 +15,4 @@ namespace CompanyHRManagement.DTO
         public DateTime RewardDate { get; set; }
         public decimal Amount { get; set; }
     }
-
 }

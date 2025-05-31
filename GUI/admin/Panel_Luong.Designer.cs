@@ -590,7 +590,6 @@
             this.panel_thongtin.Name = "panel_thongtin";
             this.panel_thongtin.Size = new System.Drawing.Size(1044, 229);
             this.panel_thongtin.TabIndex = 120;
-            this.panel_thongtin.Paint += new System.Windows.Forms.PaintEventHandler(this.panel_thongtin_Paint);
             // 
             // btnSalarythismonth
             // 

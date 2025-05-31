@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using CompanyHRManagement;
+using CompanyHRManagement.DTO;
 
 public class RewardBUS
 {
@@ -12,11 +13,11 @@ public class RewardBUS
         return rewardDAO.GetRewardsByEmployeeId(employeeId);
     }
 
-    public List<Reward> LayDanhSachKhenThuong()
+    public List<RewardDTO> LayDanhSachKhenThuong()
     {
         return rewardDAO.GetRewardsWithEmployeeName();
     }
-    public List<Reward> TimKiemThuong(
+    public List<RewardDTO> TimKiemThuong(
         string rewardID, string fullName, string reason,
         string day, string month, string year, string amount)
     {
