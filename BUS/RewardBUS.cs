@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Windows.Forms;
 using CompanyHRManagement;
 using CompanyHRManagement.DTO;
 
 public class RewardBUS
 {
-    private RewardEF rewardDAO = new RewardEF();
+    private RewardEF r = new RewardEF();
 
-    public List<Reward> LayDanhSachThuongTheoNhanVien(int employeeId)
+    public DataTable LayDanhSachThuongTheoNhanVien(int employeeId)
     {
-        return rewardDAO.GetRewardsByEmployeeId(employeeId);
+        return r.LayDanhSachThuongTheoNhanVien(employeeId);
     }
 
     public List<RewardDTO> LayDanhSachKhenThuong()
     {
-        return rewardDAO.GetRewardsWithEmployeeName();
+        return r.GetRewardsWithEmployeeName();
     }
     public List<RewardDTO> TimKiemThuong(
         string rewardID, string fullName, string reason,
         string day, string month, string year, string amount)
     {
-        return rewardDAO.SearchRewards(rewardID, fullName, reason, day, month, year, amount);
+        return r.SearchRewards(rewardID, fullName, reason, day, month, year, amount);
     }
 
     public bool ThemThuong(string fullName, string reason, string dayStr, string monthStr, string yearStr, decimal amount, ref string error)
@@ -61,12 +62,12 @@ public class RewardBUS
             return false;
         }
 
-        return rewardDAO.InsertReward(fullName, reason, rewardDate, amount, ref error);
+        return r.InsertReward(fullName, reason, rewardDate, amount, ref error);
     }
 
     public bool xoaThuong(List<int> rewardIDs, ref string error)
     {
-        return rewardDAO.DeleteRewardsByIDs(rewardIDs, ref error);
+        return r.DeleteRewardsByIDs(rewardIDs, ref error);
     }
 
     public bool CapNhatReward(string rewardIDStr, string fullName, string reason, string dayStr, string monthStr, string yearStr, decimal amount, ref string error)
@@ -101,7 +102,7 @@ public class RewardBUS
         }
 
         // Gọi DAO để cập nhật
-        return rewardDAO.UpdateRewardByID(rewardID, fullName, reason, rewardDate, amount, ref error);
+        return r.UpdateRewardByID(rewardID, fullName, reason, rewardDate, amount, ref error);
     }
 
 

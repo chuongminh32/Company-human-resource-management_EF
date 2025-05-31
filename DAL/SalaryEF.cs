@@ -21,17 +21,73 @@ public class SalaryEF
         }
     }
 
-
-    public List<CompanyHRManagement.Salary> LayThongTinLuongTheoID(int employeeId)
+    /// Lấy thông tin lương của một nhân viên (theo employeeId),
+    /// bao gồm mã lương, mã NV, tên NV, lương cơ bản, phụ cấp, thưởng,
+    /// phạt, giờ tăng ca, tháng, năm, tổng lương.
+    /// Trả về DataTable để binding lên DataGridView hoặc xuất báo cáo.
+    /// </summary>
+    public DataTable LayLuongTheoNhanVien(int employeeId)
     {
-        using (var context = new CompanyHRManagementEntities()) 
+        using (var context = new CompanyHRManagementEntities())
         {
-            return context.Salaries
-                          .Where(s => s.EmployeeID == employeeId)
-                          .ToList();
+            // 1) Query LINQ to Entities: join bảng Salaries và Employees, có thêm điều kiện WHERE để lọc theo employeeId
+            var query = from s in context.Salaries
+                        join emp in context.Employees
+                          on s.EmployeeID equals emp.EmployeeID
+                        where s.EmployeeID == employeeId   // Thêm điều kiện lọc
+                        select new
+                        {
+                            SalaryID = s.SalaryID,
+                            EmployeeID = s.EmployeeID,
+                            EmployeeName = emp.FullName,
+                            BaseSalary = s.BaseSalary ?? 0m,
+                            Allowance = s.Allowance ?? 0m,
+                            Bonus = s.Bonus ?? 0m,
+                            Penalty = s.Penalty ?? 0m,
+                            OvertimeHours = s.OvertimeHours ?? 0,
+                            SalaryMonth = s.SalaryMonth ?? 0,
+                            SalaryYear = s.SalaryYear ?? 0,
+                            TotalSalary = (s.BaseSalary ?? 0m)
+                                          + (s.Allowance ?? 0m)
+                                          + (s.Bonus ?? 0m)
+                                          - (s.Penalty ?? 0m)
+                        };
+
+            // 2) Tạo DataTable và thêm các cột tương ứng
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Mã lương", typeof(int));
+            dt.Columns.Add("Mã nhân viên", typeof(int));
+            dt.Columns.Add("Tên nhân viên", typeof(string));
+            dt.Columns.Add("Lương cơ bản", typeof(decimal));
+            dt.Columns.Add("Phụ cấp", typeof(decimal));
+            dt.Columns.Add("Thưởng", typeof(decimal));
+            dt.Columns.Add("Phạt", typeof(decimal));
+            dt.Columns.Add("Giờ tăng ca", typeof(int));
+            dt.Columns.Add("Tháng", typeof(int));
+            dt.Columns.Add("Năm", typeof(int));
+            dt.Columns.Add("Tổng lương", typeof(decimal));
+
+            // 3) Đổ dữ liệu từ query vào DataTable
+            foreach (var item in query)
+            {
+                dt.Rows.Add(
+                    item.SalaryID,
+                    item.EmployeeID,
+                    item.EmployeeName,
+                    item.BaseSalary,
+                    item.Allowance,
+                    item.Bonus,
+                    item.Penalty,
+                    item.OvertimeHours,
+                    item.SalaryMonth,
+                    item.SalaryYear,
+                    item.TotalSalary
+                );
+            }
+
+            return dt;
         }
     }
-
     public List<SalaryDTO> LayTatCaThongTinLuong_Admin()
     {
         using (var context = new CompanyHRManagementEntities())
@@ -123,7 +179,7 @@ public class SalaryEF
 
         try
         {
-            using (var context = new CompanyHRManagementEntities()) 
+            using (var context = new CompanyHRManagementEntities())
             {
                 var salaries = context.Salaries.ToList();
 
@@ -216,9 +272,9 @@ public class SalaryEF
         using (var context = new CompanyHRManagementEntities())
         {
             var distinctYears = context.Salaries
-                .Select(s => s.SalaryYear)       
-                .Where(y => y.HasValue)          
-                .Select(y => y.Value)             
+                .Select(s => s.SalaryYear)
+                .Where(y => y.HasValue)
+                .Select(y => y.Value)
                 .Distinct()
                 .OrderByDescending(y => y)
                 .ToList();

@@ -7,30 +7,30 @@ using CompanyHRManagement.DTO;
 public class SalaryBUS
 {
     // SalaryBUS.cs
-    private SalaryEF salaryDAO = new SalaryEF();
-    public List<CompanyHRManagement.Salary> LayLuongTheoNhanVien(int employeeId)
+    private SalaryEF s = new SalaryEF();
+    public DataTable LayLuongTheoNhanVien(int employeeId)
     {
-        return salaryDAO.LayThongTinLuongTheoID(employeeId);
+        return s.LayLuongTheoNhanVien(employeeId);
     }
 
     public decimal TinhTongLuongTheoThangNam(int emID, int month, int year)
     {
-        return salaryDAO.TinhTongLuongTheoThangNam(emID, month, year);
+        return s.TinhTongLuongTheoThangNam(emID, month, year);
     }
 
     public List<SalaryDTO> LayThongTinLuong_Admin()
     {
-        return salaryDAO.LayTatCaThongTinLuong_Admin();
+        return s.LayTatCaThongTinLuong_Admin();
     }
 
     public bool TaiLaiDataLuong(ref string error)
     {
-        return salaryDAO.DeleteDuplicateSalariesKeepFirst() && salaryDAO.UpdateSalaries();
+        return s.DeleteDuplicateSalariesKeepFirst() && s.UpdateSalaries();
     }
 
     public List<int> LayDanhSachNam()
     {
-        return salaryDAO.GetDistinctSalaryYears();
+        return s.GetDistinctSalaryYears();
     }
     public List<SalaryDTO> Loc_TimKiem(
     string salaryIDStr,
@@ -55,7 +55,7 @@ public class SalaryBUS
 
 
 
-        return salaryDAO.SearchSalaries(
+        return s.SearchSalaries(
             salaryID,
             fullName,
             baseSalary,
@@ -116,12 +116,12 @@ public class SalaryBUS
         int overtime = 0;
 
         // Gọi DAO để thêm lương
-        return salaryDAO.InsertSalary(fullName, month, year, allowance, bonus, penalty, overtime, ref error);
+        return s.InsertSalary(fullName, month, year, allowance, bonus, penalty, overtime, ref error);
     }
 
     public bool XoaLuongtheoIDs(List<int> salaryIDs, ref string error)
     {
-        return salaryDAO.DeleteSalariesByIDs(salaryIDs, ref error);
+        return s.DeleteSalariesByIDs(salaryIDs, ref error);
     }
 
     public bool SuaLuong(int salaryID, string fullName, string allowanceStr, string monthStr, string yearStr, ref string error)
@@ -150,13 +150,13 @@ public class SalaryBUS
             return false;
         }
 
-        return salaryDAO.UpdateSalaryByID(salaryID, fullName, allowance, month, year, ref error);
+        return s.UpdateSalaryByID(salaryID, fullName, allowance, month, year, ref error);
     }
 
 
     public DataTable XuatBangLuongThangMoi(int month, int year)
     {
-        return salaryDAO.GetAllSalaries(month, year);
+        return s.GetAllSalaries(month, year);
     }
 
     public bool LuuBangLuongMoi(DataTable table, ref string error)
@@ -173,7 +173,7 @@ public class SalaryBUS
             decimal penalty = Convert.ToDecimal(row["Penalty"]);
             int overtimeHours = Convert.ToInt32(row["OvertimeHours"]);
 
-            bool result = salaryDAO.InsertSalary(name, month, year, allowance, bonus, penalty, overtimeHours, ref error);
+            bool result = s.InsertSalary(name, month, year, allowance, bonus, penalty, overtimeHours, ref error);
 
             if (!result)
             {

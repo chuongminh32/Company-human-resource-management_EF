@@ -10,11 +10,50 @@ public class DisciplineEF
 {
     private CompanyHRManagementEntities context = new CompanyHRManagementEntities();
     DBConnection db = new DBConnection();
-    public List<Discipline> GetDisciplinesByEmployeeId(int employeeId)
+    /// <summary>
+    /// Lấy danh sách kỷ luật của một nhân viên (employeeId), trả về DataTable.
+    /// DataTable sẽ có các cột: Mã kỷ luật, Mã nhân viên, Tên nhân viên, Lý do, Ngày kỷ luật, Số tiền phạt.
+    /// </summary>
+    public DataTable LayDanhSachPhatTheoNhanVien(int employeeId)
     {
-        return context.Disciplines
-            .Where(d => d.EmployeeID == employeeId)
-            .ToList();
+        using (var context = new CompanyHRManagementEntities())
+        {
+            var query = from d in context.Disciplines
+                        join emp in context.Employees
+                          on d.EmployeeID equals emp.EmployeeID
+                        where d.EmployeeID == employeeId
+                        select new
+                        {
+                            DisciplineID = d.DisciplineID,
+                            EmployeeID = d.EmployeeID,
+                            EmployeeName = emp.FullName,
+                            Reason = d.Reason,
+                            DisciplineDate = d.DisciplineDate,
+                            Amount = d.Amount ?? 0m
+                        };
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Mã kỷ luật", typeof(int));
+            dt.Columns.Add("Mã nhân viên", typeof(int));
+            dt.Columns.Add("Tên nhân viên", typeof(string));
+            dt.Columns.Add("Lý do", typeof(string));
+            dt.Columns.Add("Ngày kỷ luật", typeof(DateTime));
+            dt.Columns.Add("Số tiền phạt", typeof(decimal));
+
+            foreach (var item in query)
+            {
+                dt.Rows.Add(
+                    item.DisciplineID,
+                    item.EmployeeID,
+                    item.EmployeeName,
+                    item.Reason,
+                    item.DisciplineDate,
+                    item.Amount
+                );
+            }
+
+            return dt;
+        }
     }
 
     public List<DisciplineDTO> GetDisciplinesWithEmployeeName()

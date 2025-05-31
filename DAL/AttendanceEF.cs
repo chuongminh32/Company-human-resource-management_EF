@@ -11,17 +11,74 @@ public class AttendanceEF
 {
 
     // -- User -- 
-    public List<Attendance> LayDuLieuChamCongQuaID(int employeeID)
+    /// <summary>
+    /// Lấy danh sách chấm công (Attendance) của 1 nhân viên (employeeId),
+    /// trả về dạng DataTable với các cột cần thiết để hiển thị trong DataGridView.
+    /// Các cột sẽ là: "Mã Attendance", "Mã nhân viên", "Ngày làm việc", "CheckIn", "CheckOut", "Giờ tăng ca", "Trạng thái vắng mặt".
+    /// (Nếu hiển thị thêm tên nhân viên, có thể join Employees để lấy emp.FullName rồi thêm cột "Tên nhân viên".)
+    /// </summary>
+    public DataTable LayDuLieuChamCongQuaID(int employeeId)
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            return context.Attendances
-                .Where(a => a.EmployeeID == employeeID)
-                .ToList();
+            // 1) Tạo query để lấy các trường primitive cần hiển thị
+            var query = from a in context.Attendances
+                            // Nếu  muốn show tên NV, uncomment 2 dòng dưới:
+                            // join emp in context.Employees on a.EmployeeID equals emp.EmployeeID
+                            // where a.EmployeeID == employeeId && emp.EmployeeID == employeeId
+                        where a.EmployeeID == employeeId
+                        select new
+                        {
+                            AttendanceID = a.AttendanceID,
+                            EmployeeID = a.EmployeeID,
+                            WorkDate = a.WorkDate,       // kiểu DateTime?
+                            CheckIn = a.CheckIn,        // TimeSpan?
+                            CheckOut = a.CheckOut,       // TimeSpan?
+                            OvertimeHours = a.OvertimeHours,   // int?
+                            AbsenceStatus = a.AbsenceStatus    // string
+                                                               // Nếu cần tên NV, thêm: EmployeeName = emp.FullName
+                        };
+
+            // 2) Khởi tạo DataTable và thêm cột tương ứng
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Mã Attendance", typeof(int));
+            dt.Columns.Add("Mã nhân viên", typeof(int));
+            dt.Columns.Add("Ngày làm việc", typeof(DateTime));
+            dt.Columns.Add("CheckIn", typeof(TimeSpan));
+            dt.Columns.Add("CheckOut", typeof(TimeSpan));
+            dt.Columns.Add("Giờ tăng ca", typeof(int));
+            dt.Columns.Add("Trạng thái vắng", typeof(string));
+            // Nếu có thêm tên NV: dt.Columns.Add("Tên nhân viên", typeof(string));
+
+            // 3) Đổ dữ liệu vào DataTable
+            foreach (var item in query)
+            {
+                // Chuyển các giá trị nullable về giá trị mặc định nếu null
+                DateTime workDate = item.WorkDate ?? DateTime.MinValue;
+                TimeSpan checkIn = item.CheckIn ?? TimeSpan.Zero;
+                TimeSpan checkOut = item.CheckOut ?? TimeSpan.Zero;
+                int overtimeHours = item.OvertimeHours ?? 0;
+                string absenceStatus = item.AbsenceStatus ?? String.Empty;
+
+                dt.Rows.Add(
+                    item.AttendanceID,
+                    item.EmployeeID,
+                    workDate,
+                    checkIn,
+                    checkOut,
+                    overtimeHours,
+                    absenceStatus
+                // Nếu thêm tên NV: item.EmployeeName
+                );
+            }
+
+            return dt;
         }
     }
 
-    public int laySoNgayCongTrongThangHienTaiTheoID(int employeeID)
+
+
+    public int LaySoNgayCongTrongThangHienTaiTheoID(int employeeID)
     {
         using (var context = new CompanyHRManagementEntities())
         {
@@ -29,17 +86,21 @@ public class AttendanceEF
             int month = today.Month;
             int year = today.Year;
 
-            // Đếm số ngày công (WorkDate) khác nhau trong tháng hiện tại
+            // Đếm số ngày công (WorkDate) khác nhau trong tháng hiện tại,
+            // chỉ tính những bản ghi có CheckIn và CheckOut khác null.
             int daysWorked = context.Attendances
-                 .Where(a => a.EmployeeID == employeeID
-                             && a.WorkDate.HasValue
-                             && a.WorkDate.Value.Month == month
-                             && a.WorkDate.Value.Year == year
-                             && a.CheckIn != null
-                             && a.CheckOut != null)
-                 .Select(a => a.WorkDate.Value.Date)
-                 .Distinct()
-                 .Count();
+                .Where(a =>
+                    a.EmployeeID == employeeID &&
+                    a.WorkDate.HasValue &&
+                    a.WorkDate.Value.Month == month &&
+                    a.WorkDate.Value.Year == year &&
+                    a.CheckIn != null &&
+                    a.CheckOut != null
+                )
+                // TruncateTime(a.WorkDate) trả về chỉ phần ngày (bỏ giờ), EF sẽ translate sang CONVERT(date, ...)
+                .Select(a => DbFunctions.TruncateTime(a.WorkDate))
+                .Distinct()
+                .Count();
 
             return daysWorked;
         }
@@ -49,33 +110,45 @@ public class AttendanceEF
     {
         double tongGioLam = 0;
 
-        DateTime ngayDauThang = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        // 1) Xác định ngày đầu và ngày cuối của tháng hiện tại
+        DateTime today = DateTime.Today;
+        DateTime ngayDauThang = new DateTime(today.Year, today.Month, 1);
         DateTime ngayCuoiThang = ngayDauThang.AddMonths(1).AddDays(-1);
 
         using (var context = new CompanyHRManagementEntities())
         {
-            // Lấy danh sách attendance hợp lệ trong tháng
+            // 2) Lọc các attendance hợp lệ trong khoảng [ngayDauThang, ngayCuoiThang]
+            //    → Đảm bảo WorkDate có giá trị và nằm trong tháng, cùng CheckIn/CheckOut không null
             var attendances = context.Attendances
-                .Where(a => a.EmployeeID == employeeId
-                         && a.WorkDate.HasValue
-                         && a.WorkDate.Value.Date >= ngayDauThang
-                         && a.WorkDate.Value.Date <= ngayCuoiThang
-                         && a.CheckIn != null
-                         && a.CheckOut != null)
+                .Where(a =>
+                    a.EmployeeID == employeeId &&
+                    a.WorkDate.HasValue &&
+                    // So sánh trực tiếp WorkDate với khoảng [ngayDauThang, ngayCuoiThang]
+                    a.WorkDate.Value >= ngayDauThang &&
+                    a.WorkDate.Value <= ngayCuoiThang &&
+                    a.CheckIn != null &&
+                    a.CheckOut != null
+                )
                 .Select(a => new
                 {
                     CheckIn = a.CheckIn.Value,
                     CheckOut = a.CheckOut.Value
                 })
-                .ToList();
+                .ToList(); // Ở đây dữ liệu đã về C#, có thể tính TimeSpan
 
-            foreach (var att in attendances)
+            // 3) Tính tổng số giờ làm: sum((CheckOut - CheckIn).TotalHours)
+            foreach (var at in attendances)
             {
-                TimeSpan duration = att.CheckOut - att.CheckIn;
-                tongGioLam += duration.TotalHours;
+                TimeSpan duration = at.CheckOut - at.CheckIn;
+                // Chỉ cộng nếu duration dương, để tránh trường hợp check-in > check-out
+                if (duration.TotalHours > 0)
+                {
+                    tongGioLam += duration.TotalHours;
+                }
             }
         }
 
+        // 4) Nếu muốn làm tròn đến 2 chữ số sau dấu thập phân, dùng Math.Round
         return Math.Round(tongGioLam, 2);
     }
 
@@ -291,15 +364,38 @@ public class AttendanceEF
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            var result = context.Attendances
-                .Where(a => a.WorkDate.HasValue) // lọc ra các dòng có WorkDate
-                .GroupBy(a => new { Month = a.WorkDate.Value.Month, Year = a.WorkDate.Value.Year })
+            // 1. Lấy danh sách anonymous type { Year, Month, WorkDays }
+            var raw = context.Attendances
+                // Chỉ lấy những bản ghi có WorkDate != null
+                .Where(a => a.WorkDate.HasValue)
+                // Group theo cặp (Year, Month)
+                .GroupBy(a => new
+                {
+                    Year = a.WorkDate.Value.Year,
+                    Month = a.WorkDate.Value.Month
+                })
+                // Sắp xếp theo năm → tháng
                 .OrderBy(g => g.Key.Year)
                 .ThenBy(g => g.Key.Month)
-                .Select(g => new Attendance
+                // Trong mỗi nhóm g, đếm số ngày khác nhau (dùng TruncateTime để chỉ xét phần date)
+                .Select(g => new
                 {
-                    MonthYear = g.Key.Month.ToString("D2") + "/" + g.Key.Year,
-                    WorkDays = g.Select(x => x.WorkDate.Value.Date).Distinct().Count()
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    WorkDays = g
+                        .Select(x => DbFunctions.TruncateTime(x.WorkDate))
+                        .Distinct()
+                        .Count()
+                })
+                .ToList(); // EF thực thi SQL tại đây
+
+            // 2. Chuyển từ anonymous type sang List<Attendance>
+            //    (chỉ gán MonthYear & WorkDays, các thuộc tính khác để null/giá trị mặc định)
+            var result = raw
+                .Select(x => new Attendance
+                {
+                    MonthYear = x.Month.ToString("D2") + "/" + x.Year, // "MM/yyyy"
+                    WorkDays = x.WorkDays
                 })
                 .ToList();
 

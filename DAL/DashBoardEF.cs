@@ -11,192 +11,85 @@ namespace CompanyHRManagement.DAL._ado
 {
     public class DashBoardEF
     {
-        DBConnection db = new DBConnection();
-
-        public Dictionary<string, int> GetEmployeeCountByDepartment()
-        {
-            var result = new Dictionary<string, int>();
-
-            using (SqlConnection conn = DBConnection.GetConnection())
-            {
-                string query = @"
-                SELECT d.DepartmentName, COUNT(e.EmployeeID) AS EmployeeCount
-                FROM Departments d
-                LEFT JOIN Employees e ON d.DepartmentID = e.DepartmentID
-                GROUP BY d.DepartmentName";
-
-                SqlCommand cmd = new SqlCommand(query, conn);
-                conn.Open();
-                SqlDataReader reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    string dept = reader["DepartmentName"].ToString();
-                    int count = Convert.ToInt32(reader["EmployeeCount"]);
-                    result[dept] = count;
-                }
-            }
-
-            return result;
-        }
-
-        public DataTable GetSalaryStructureThisYear(int year)
-        {
-            SqlConnection conn = DBConnection.GetConnection();
-            DataTable dt = new DataTable();
-
-            try
-            {
-                conn.Open();
-                string query = @"
-            SELECT 
-                SUM(BaseSalary) AS TotalBaseSalary,
-                SUM(Allowance) AS TotalAllowance,
-                SUM(Bonus) AS TotalBonus,
-                SUM(Penalty) AS TotalPenalty,
-                SUM(OvertimeHours) AS TotalOvertime
-            FROM Salaries
-            WHERE SalaryYear = @year";
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@year", year);
-
-                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                adapter.Fill(dt);
-            }
-            finally
-            {
-                conn.Close();
-            }
-
-            return dt;
-        }
-
-        public int GetToTalRewardSalary()
-        {
-            string query = "SELECT SUM(Amount) FROM Rewards";
-            object result = DBConnection.ExecuteScalar(query);
-
-            return result != DBNull.Value ? Convert.ToInt32(result) : 0;
-        }
-
-
-        public int GetTotalValidInsurances()
-        {
-            string query = "SELECT COUNT(*) FROM Insurance WHERE ExpiryDate >= GETDATE()";
-            return (int)DBConnection.ExecuteScalar(query);
-        }
-
-
-        public int GetTotalEmployees()
-        {
-            string query = "SELECT COUNT(*) FROM Employees WHERE IsFired = 0";
-            return (int)DBConnection.ExecuteScalar(query);
-        }
-
-        public int GetTotalDepartments()
-        {
-            string query = "SELECT COUNT(*) FROM Departments";
-            return (int)DBConnection.ExecuteScalar(query);
-        }
-
-        public int GetTotalPositions()
-        {
-            string query = "SELECT COUNT(*) FROM Positions";
-            return (int)DBConnection.ExecuteScalar(query);
-        }
-
-        public int GetProbationCount()
-        {
-            string query = "SELECT COUNT(*) FROM Employees WHERE IsProbation = 1 AND IsFired = 0";
-            return (int)DBConnection.ExecuteScalar(query);
-        }
-
-
-
 
         //---------- Employee DashBoard - USER -----------
         // Lấy tên vị trí chức vụ theo ID 
         public string LayVitriChucVuTheoID(int userID)
         {
-            string query = @"       
-                SELECT p.PositionName
-                FROM Employees e
-                JOIN Positions p ON e.PositionID = p.PositionID
-                WHERE e.EmployeeID = @userID
-            ";
+            using (var context = new CompanyHRManagementEntities())
+            {
+                // Giả sử lớp Employee có navigation property: Position
+                var positionName = context.Employees
+                    .Where(e => e.EmployeeID == userID)
+                    .Select(e => e.Position.PositionName)
+                    .FirstOrDefault();
 
-            SqlParameter[] parameters = { new SqlParameter("@userID", userID) };
-            object result = DBConnection.ExecuteScalar(query, parameters);
-            return result?.ToString();
+                return positionName;
+            }
         }
 
 
-        public string LayTenPhongBanQuaID(int idDeparment)
+        public string LayTenPhongBanQuaID(int idDepartment)
         {
-            string query = @"       
-                SELECT D.DepartmentName
-                FROM Employees E
-                JOIN Departments D ON E.DepartmentID = D.DepartmentID
-                WHERE E.DepartmentID = @idDeparment;
-            ";
+            using (var context = new CompanyHRManagementEntities())
+            {
+                var departmentName = context.Departments
+                    .Where(d => d.DepartmentID == idDepartment)
+                    .Select(d => d.DepartmentName)
+                    .FirstOrDefault();
 
-            SqlParameter[] parameters = { new SqlParameter("@idDeparment", idDeparment) };
-            object result = DBConnection.ExecuteScalar(query, parameters);
-            return result?.ToString(); // tránh lỗi ép kiểu nếu result là int/null
+                return departmentName;
+            }
         }
         // Tổng lương theo tháng của 1 nhân viên
         public List<(int Month, int Year, decimal TotalSalary)> TongLuongTheoThang(int employeeId)
         {
-            string query = @"
-        SELECT SalaryMonth, SalaryYear,
-               (BaseSalary + Allowance + Bonus - Penalty) AS TotalSalary
-        FROM Salaries
-        WHERE EmployeeID = @EmployeeID
-        ORDER BY SalaryYear, SalaryMonth";
-
-            SqlParameter[] parameters = { new SqlParameter("@EmployeeID", employeeId) };
-
-            var result = new List<(int, int, decimal)>();
-            using (var reader = DBConnection.ExecuteReader(query, parameters))
+            using (var context = new CompanyHRManagementEntities())
             {
-                while (reader.Read())
-                {
-                    int month = (int)reader["SalaryMonth"];
-                    int year = (int)reader["SalaryYear"];
-                    decimal salary = (decimal)reader["TotalSalary"];
-                    result.Add((month, year, salary));
-                }
+                var result = context.Salaries
+                    .Where(s => s.EmployeeID == employeeId)
+                    .OrderBy(s => s.SalaryYear)
+                    .ThenBy(s => s.SalaryMonth)
+                    .Select(s => new
+                    {
+                        Month = s.SalaryMonth,
+                        Year = s.SalaryYear,
+                        TotalSalary = s.BaseSalary + s.Allowance + s.Bonus - s.Penalty
+                    })
+                    .ToList()
+                    .Select(s => (
+                    Month: s.Month ?? 0,
+                    Year: s.Year ?? 0,
+                    TotalSalary: s.TotalSalary ?? 0m))
+                    .ToList();
+
+                return result;
             }
-            return result;
         }
+
 
         // Số ngày công theo tháng
         public List<(int Month, int Year, int WorkDays)> SoNgayCongTheoThang(int employeeId)
         {
-            string query = @"
-        SELECT MONTH(WorkDate) AS Month, YEAR(WorkDate) AS Year, COUNT(*) AS WorkDays
-        FROM Attendance
-        WHERE EmployeeID = @EmployeeID
-        GROUP BY MONTH(WorkDate), YEAR(WorkDate)
-        ORDER BY Year, Month";
-
-            SqlParameter[] parameters = { new SqlParameter("@EmployeeID", employeeId) };
-
-            var result = new List<(int, int, int)>();
-            using (var reader = DBConnection.ExecuteReader(query, parameters))
+            using (var context = new CompanyHRManagementEntities())
             {
-                while (reader.Read())
-                {
-                    int month = (int)reader["Month"];
-                    int year = (int)reader["Year"];
-                    int days = (int)reader["WorkDays"];
-                    result.Add((month, year, days));
-                }
+                var query = context.Attendances
+                    .Where(a => a.EmployeeID == employeeId && a.WorkDate.HasValue)
+                    .GroupBy(a => new { Month = a.WorkDate.Value.Month, Year = a.WorkDate.Value.Year })
+                    .OrderBy(g => g.Key.Year)
+                    .ThenBy(g => g.Key.Month)
+                    .Select(g => new
+                    {
+                        Month = g.Key.Month,
+                        Year = g.Key.Year,
+                        WorkDays = g.Count()
+                    })
+                    .ToList(); // EF thực thi truy vấn tại đây
+
+                // Chuyển từ anonymous type -> tuple sau khi dữ liệu đã tải về
+                return query.Select(x => (x.Month, x.Year, x.WorkDays)).ToList();
             }
-            return result;
         }
-
-
-
 
     }
 }

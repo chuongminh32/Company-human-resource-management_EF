@@ -332,25 +332,43 @@ namespace CompanyHRManagement.GUI.user
 
         private void TaiDuLieuBangChamCong()
         {
-            var list = attendanceBUS.LayDuLieuChamCongQuaID(user_id);
-            dgvBangChamCong.DataSource = list;
-            // cập nhật lại các thông tin chấm công 
+            // 1) Lấy DataTable thay vì List<Attendance>
+            var dt = attendanceBUS.LayDuLieuChamCongQuaID(user_id);
+            dgvBangChamCong.AutoGenerateColumns = true;
+            dgvBangChamCong.DataSource = dt;
+
+            // 2) Cập nhật các label
             lblID.Text = user_id.ToString();
             lblNgayHomNay.Text = DateTime.Now.ToString("dd/MM/yyyy");
             lblSoNgayCong.Text = attendanceBUS.laySoNgayCongTrongThangHienTaiTheoID(user_id).ToString();
             lblTongGioLam.Text = attendanceBUS.layTongGioLamTrongThangHienTaiTheoID(user_id).ToString();
 
-            // định dạng cột trong dgv
-            dgvBangChamCong.Columns["AttendanceID"].HeaderText = "Mã chấm công";
-            dgvBangChamCong.Columns["EmployeeID"].HeaderText = "Mã nhân viên";
-            dgvBangChamCong.Columns["WorkDate"].HeaderText = "Ngày";
-            dgvBangChamCong.Columns["CheckIn"].HeaderText = "Giờ vào";
-            dgvBangChamCong.Columns["CheckOut"].HeaderText = "Giờ ra";
-            dgvBangChamCong.Columns["OvertimeHours"].HeaderText = "Giờ tăng ca";
-            dgvBangChamCong.Columns["AbsenceStatus"].HeaderText = "Trạng thái";
+            // 3) Đổi tiêu đề cột (phải trùng đúng với tên cột trong DataTable)
+            // Ví dụ DataTable thêm cột "MãAttendance", "MãNhânViên", v.v...
+            if (dgvBangChamCong.Columns.Contains("MãAttendance"))
+                dgvBangChamCong.Columns["MãAttendance"].HeaderText = "Mã chấm công";
+            if (dgvBangChamCong.Columns.Contains("MãNhânViên"))
+                dgvBangChamCong.Columns["MãNhânViên"].HeaderText = "Mã nhân viên";
+            if (dgvBangChamCong.Columns.Contains("NgàyLàmViệc"))
+                dgvBangChamCong.Columns["NgàyLàmViệc"].HeaderText = "Ngày";
+            if (dgvBangChamCong.Columns.Contains("CheckIn"))
+                dgvBangChamCong.Columns["CheckIn"].HeaderText = "Giờ vào";
+            if (dgvBangChamCong.Columns.Contains("CheckOut"))
+                dgvBangChamCong.Columns["CheckOut"].HeaderText = "Giờ ra";
+            if (dgvBangChamCong.Columns.Contains("GiờTăngCa"))
+                dgvBangChamCong.Columns["GiờTăngCa"].HeaderText = "Giờ tăng ca";
+            if (dgvBangChamCong.Columns.Contains("TrạngTháiVắng"))
+                dgvBangChamCong.Columns["TrạngTháiVắng"].HeaderText = "Trạng thái";
 
-            dgvBangChamCong.Columns["MonthYear"].Visible = false;
-            dgvBangChamCong.Columns["WorkDays"].Visible = false;
+            // 4) (Tùy chọn) Định dạng cột
+            if (dgvBangChamCong.Columns.Contains("CheckIn"))
+                dgvBangChamCong.Columns["CheckIn"].DefaultCellStyle.Format = @"hh\:mm";
+            if (dgvBangChamCong.Columns.Contains("CheckOut"))
+                dgvBangChamCong.Columns["CheckOut"].DefaultCellStyle.Format = @"hh\:mm";
+
+            // 5) (Tùy chọn) Ẩn cột nếu không cần
+            // if (dgvBangChamCong.Columns.Contains("MãNhânViên"))
+            //     dgvBangChamCong.Columns["MãNhânViên"].Visible = false;
 
         }
 
@@ -403,56 +421,96 @@ namespace CompanyHRManagement.GUI.user
 
 
         }
+        private void MainForm_user_Load(object sender, EventArgs e)
+        {
+            // Bắt DataError để không hiển thị dialog mặc định
+            dgvLuong.DataError += DgvLuong_DataError;
+        }
+
+        private void DgvLuong_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            // Chặn dialog, bạn có thể log e.Exception nếu cần
+            e.ThrowException = false;
+        }
 
         private void TaiThuongNhanVien(int employeeId)
         {
-            var list = rewardBUS.LayDanhSachThuongTheoNhanVien(employeeId);
-            dgvThuong.DataSource = list;
+            // 1) Lấy DataTable từ BUS
+            DataTable dataReward = rewardBUS.LayDanhSachThuongTheoNhanVien(employeeId);
 
-            // Đặt tiêu đề cho các cột
-            dgvThuong.Columns["RewardID"].HeaderText = "Mã thưởng";
-            dgvThuong.Columns["EmployeeID"].HeaderText = "Mã nhân viên";
-            dgvThuong.Columns["Reason"].HeaderText = "Lý do";
-            dgvThuong.Columns["RewardDate"].HeaderText = "Ngày thưởng";
-            dgvThuong.Columns["Amount"].HeaderText = "Số tiền thưởng";
+            // 2) Bind DataTable vào DataGridView
+            dgvThuong.AutoGenerateColumns = true;
+            dgvThuong.DataSource = dataReward;
+
+            // 3) Đổi HeaderText (nếu bạn muốn hiển thị khác, mặc dù tên cột đã rõ rồi)
+            if (dgvThuong.Columns.Contains("Mã Reward"))
+                dgvThuong.Columns["Mã Reward"].HeaderText = "Mã thưởng";
+            if (dgvThuong.Columns.Contains("Mã nhân viên"))
+                dgvThuong.Columns["Mã nhân viên"].HeaderText = "Mã nhân viên";
+            if (dgvThuong.Columns.Contains("Tên nhân viên"))
+                dgvThuong.Columns["Tên nhân viên"].HeaderText = "Họ tên";
+            if (dgvThuong.Columns.Contains("Lý do"))
+                dgvThuong.Columns["Lý do"].HeaderText = "Lý do";
+            if (dgvThuong.Columns.Contains("Ngày thưởng"))
+                dgvThuong.Columns["Ngày thưởng"].HeaderText = "Ngày thưởng";
+            if (dgvThuong.Columns.Contains("Số tiền thưởng"))
+            {
+                dgvThuong.Columns["Số tiền thưởng"].HeaderText = "Số tiền thưởng";
+                dgvThuong.Columns["Số tiền thưởng"].DefaultCellStyle.Format = "N0";
+            }
         }
 
 
         private void TaiPhatNhanVien(int employeeId)
         {
-            var list = disciplineBUS.LayDanhSachPhatTheoNhanVien(employeeId);
-            dgvPhat.DataSource = list;
+            // 1) Lấy DataTable từ BUS
+            DataTable dataPhat = disciplineBUS.LayDanhSachPhatTheoNhanVien(employeeId);
 
-            // Đổi tiêu đề các cột
-            dgvPhat.Columns["DisciplineID"].HeaderText = "Mã kỷ luật";
-            dgvPhat.Columns["EmployeeID"].HeaderText = "Mã nhân viên";
-            dgvPhat.Columns["Reason"].HeaderText = "Lý do";
-            dgvPhat.Columns["DisciplineDate"].HeaderText = "Ngày kỷ luật";
-            dgvPhat.Columns["Amount"].HeaderText = "Số tiền phạt";
+            // 2) Bind DataTable
+            dgvPhat.AutoGenerateColumns = true;
+            dgvPhat.DataSource = dataPhat;
 
-            // (Tùy chọn) Định dạng cột số tiền
-            dgvPhat.Columns["Amount"].DefaultCellStyle.Format = "N0";
+            // 3) Đổi HeaderText nếu muốn
+            if (dgvPhat.Columns.Contains("Mã kỷ luật"))
+                dgvPhat.Columns["Mã kỷ luật"].HeaderText = "Mã kỷ luật";
+            if (dgvPhat.Columns.Contains("Mã nhân viên"))
+                dgvPhat.Columns["Mã nhân viên"].HeaderText = "Mã nhân viên";
+            if (dgvPhat.Columns.Contains("Tên nhân viên"))
+                dgvPhat.Columns["Tên nhân viên"].HeaderText = "Họ tên";
+            if (dgvPhat.Columns.Contains("Lý do"))
+                dgvPhat.Columns["Lý do"].HeaderText = "Lý do";
+            if (dgvPhat.Columns.Contains("Ngày kỷ luật"))
+                dgvPhat.Columns["Ngày kỷ luật"].HeaderText = "Ngày kỷ luật";
+            if (dgvPhat.Columns.Contains("Số tiền phạt"))
+            {
+                dgvPhat.Columns["Số tiền phạt"].HeaderText = "Số tiền phạt";
+                dgvPhat.Columns["Số tiền phạt"].DefaultCellStyle.Format = "N0";
+            }
         }
 
         private void TaiLuongNhanVien(int employeeId)
         {
-            var list = salaryBUS.LayLuongTheoNhanVien(employeeId);
-            dgvLuong.DataSource = list;
-            //  Đổi tiêu đề cột cho dễ hiểu
-            dgvLuong.Columns["SalaryID"].HeaderText = "Mã lương";
-            dgvLuong.Columns["EmployeeID"].HeaderText = "Mã nhân viên";
-            dgvLuong.Columns["BaseSalary"].HeaderText = "Lương cơ bản";
-            dgvLuong.Columns["Allowance"].HeaderText = "Phụ cấp";
-            dgvLuong.Columns["Bonus"].HeaderText = "Thưởng";
-            dgvLuong.Columns["Penalty"].HeaderText = "Phạt";
-            dgvLuong.Columns["OvertimeHours"].HeaderText = "Giờ tăng ca";
-            dgvLuong.Columns["SalaryMonth"].HeaderText = "Tháng";
-            dgvLuong.Columns["SalaryYear"].HeaderText = "Năm";
-            // Ẩn các cột không muốn hiển thị
-            dgvLuong.Columns["FullName"].Visible = false;
-            dgvLuong.Columns["TotalSalary"].Visible = false;
+            // Khi form load – hoặc khi click nút “Tải lương”
+            var dtSalary = salaryBUS.LayLuongTheoNhanVien(employeeId);
+            dgvLuong.DataSource = dtSalary;
 
+            // Nếu muốn set thêm style, HeaderText, format cột:
+            // Ví dụ: căn phải các cột số, định dạng 2 chữ số thập phân cho Lương cơ bản
+            dgvLuong.Columns["Lương cơ bản"].DefaultCellStyle.Format = "N2";
+            dgvLuong.Columns["Phụ cấp"].DefaultCellStyle.Format = "N2";
+            dgvLuong.Columns["Thưởng"].DefaultCellStyle.Format = "N2";
+            dgvLuong.Columns["Phạt"].DefaultCellStyle.Format = "N2";
+            dgvLuong.Columns["Tổng lương"].DefaultCellStyle.Format = "N2";
+
+            // Thay tên Header nếu thích (nếu bạn muốn đổi)
+            dgvLuong.Columns["Mã lương"].HeaderText = "Mã lương";
+            dgvLuong.Columns["Mã nhân viên"].HeaderText = "Mã NV";
+            dgvLuong.Columns["Tên nhân viên"].HeaderText = "Họ tên";
+            // … tương tự với các cột khác …
         }
+
+
+
         private void btnTinhTongLuong_Click(object sender, EventArgs e)
         {
             try
@@ -498,16 +556,17 @@ namespace CompanyHRManagement.GUI.user
         // tải dữ liệu nghỉ phép của nhân viên
         public void TaiDuLuNghiPhepNhanVien()
         {
-            // Lấy danh sách đơn nghỉ phép bằng EF
-            List<Leaf> leaveList = leaveBUS.LayDuLieuNghiPhepTheoIDNhanVien(user_id);
+            // Lấy dữ liệu dạng DataTable
+            DataTable dt = leaveBUS.LayDuLieuNghiPhepTheoIDNhanVien(user_id);
 
             // Gán datasource trực tiếp cho DataGridView
-            dgvNghiPhep.DataSource = leaveList;
+            dgvNghiPhep.DataSource = dt;
 
+            // Hiển thị thông tin nhân viên
             lbl_ID.Text = user_id.ToString();
             lblHoVaTen.Text = fullname;
 
-            // Đổi tên cột nếu cần
+            // Đổi tên cột hiển thị
             dgvNghiPhep.Columns["LeaveID"].HeaderText = "STT";
             dgvNghiPhep.Columns["EmployeeID"].HeaderText = "Mã nhân viên";
             dgvNghiPhep.Columns["StartDate"].HeaderText = "Ngày bắt đầu";

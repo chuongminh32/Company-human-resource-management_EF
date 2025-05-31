@@ -39,7 +39,7 @@ namespace CompanyHRManagement.GUI.admin
                 dgvMess.ReadOnly = true;
                 dgvMess.DefaultCellStyle.Font = new Font("Segoe UI", 11);
                 dgvMess.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11, FontStyle.Bold);
-
+                dgvMess.AllowUserToAddRows = false;
 
                 if (!dgvMess.Columns.Contains("colEdit"))
                 {
@@ -119,7 +119,11 @@ namespace CompanyHRManagement.GUI.admin
 
         private void dgvLSTin_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0) return;
+            if (e.RowIndex < 0 || e.RowIndex >= dgvMess.Rows.Count - 1) return;
+            if (dgvMess.Rows[e.RowIndex].Cells["Mã"].Value == null ||dgvMess.Rows[e.RowIndex].Cells["Mã"].Value == DBNull.Value)
+            {
+                return;
+            }
             var messageId = Convert.ToInt32(dgvMess.Rows[e.RowIndex].Cells["Mã"].Value);
 
             if (dgvMess.Columns[e.ColumnIndex].Name == "colEdit")

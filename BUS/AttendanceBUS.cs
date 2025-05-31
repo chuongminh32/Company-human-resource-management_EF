@@ -9,7 +9,7 @@ public class AttendanceBUS
     AttendanceEF a = new AttendanceEF();
 
     // --  User -- 
-    public List<Attendance> LayDuLieuChamCongQuaID(int employeeID)
+    public DataTable LayDuLieuChamCongQuaID(int employeeID)
     {
         return a.LayDuLieuChamCongQuaID(employeeID);
     }
@@ -19,7 +19,7 @@ public class AttendanceBUS
     }
     public int laySoNgayCongTrongThangHienTaiTheoID(int employeeID)
     {
-        return a.laySoNgayCongTrongThangHienTaiTheoID(employeeID);
+        return a.LaySoNgayCongTrongThangHienTaiTheoID(employeeID);
     }
     public string ChamCong(int employeeId)
     {
