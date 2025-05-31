@@ -35,6 +35,5 @@ namespace CompanyHRManagement
         public virtual DbSet<Reward> Rewards { get; set; }
         public virtual DbSet<Salary> Salaries { get; set; }
         public virtual DbSet<sysdiagram> sysdiagrams { get; set; }
-        public virtual DbSet<User> Users { get; set; }
     }
 }

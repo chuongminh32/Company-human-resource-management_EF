@@ -11,7 +11,7 @@ namespace CompanyHRManagement
 {
     using System;
     using System.Collections.Generic;
-
+    
     public partial class Employee
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
@@ -23,8 +23,9 @@ namespace CompanyHRManagement
             this.Messages1 = new HashSet<Message>();
             this.Rewards = new HashSet<Reward>();
             this.Salaries = new HashSet<Salary>();
+            this.Leaves = new HashSet<Leaf>();
         }
-
+    
         public int EmployeeID { get; set; }
         public string FullName { get; set; }
         public Nullable<System.DateTime> BirthDate { get; set; }
@@ -38,10 +39,7 @@ namespace CompanyHRManagement
         public Nullable<bool> IsProbation { get; set; }
         public Nullable<bool> IsFired { get; set; }
         public string Password { get; set; }
-
-        public string Status { get; set; }
-        public int Count { get; set; }
-
+    
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Attendance> Attendances { get; set; }
         public virtual Department Department { get; set; }
@@ -56,5 +54,7 @@ namespace CompanyHRManagement
         public virtual ICollection<Reward> Rewards { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Salary> Salaries { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Leaf> Leaves { get; set; }
     }
 }

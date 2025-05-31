@@ -11,7 +11,7 @@ namespace CompanyHRManagement
 {
     using System;
     using System.Collections.Generic;
-
+    
     public partial class Reward
     {
         public int RewardID { get; set; }
@@ -19,10 +19,7 @@ namespace CompanyHRManagement
         public string Reason { get; set; }
         public Nullable<System.DateTime> RewardDate { get; set; }
         public Nullable<decimal> Amount { get; set; }
-
+    
         public virtual Employee Employee { get; set; }
-
-        public string FullName { get; set; }
-
     }
 }

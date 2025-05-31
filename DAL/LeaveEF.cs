@@ -87,17 +87,17 @@ namespace CompanyHRManagement.DAL._ado
         public DataTable GetLeaveEF()
         {
             CompanyHRManagementEntities x = new CompanyHRManagementEntities();
-            var query = from leave in x.Leaves
-                        join employee in x.Employees on leave.EmployeeID equals employee.EmployeeID
+            var query = from leaf in x.Leaves
+                        join employee in x.Employees on leaf.EmployeeID equals employee.EmployeeID
                         select new
                         {
-                            leave.LeaveID,
-                            leave.EmployeeID,
+                            leaf.LeaveID,
+                            leaf.EmployeeID,
                             EmployeeName = employee.FullName,
-                            leave.StartDate,
-                            leave.EndDate,
-                            leave.Reason,
-                            leave.status
+                            leaf.StartDate,
+                            leaf.EndDate,
+                            leaf.Reason,
+                            leaf.status
                         };
             DataTable dt = new DataTable();
             dt.Columns.Add("Mã");

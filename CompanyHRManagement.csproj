@@ -271,9 +271,6 @@
     <Compile Include="sysdiagram.cs">
       <DependentUpon>CompanyHR_Model.tt</DependentUpon>
     </Compile>
-    <Compile Include="User.cs">
-      <DependentUpon>CompanyHR_Model.tt</DependentUpon>
-    </Compile>
     <Compile Include="Utils\EmailHelper.cs" />
     <EntityDeploy Include="CompanyHR_Model.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
