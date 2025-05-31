@@ -10,13 +10,48 @@ public class RewardEF
 {
     DBConnection db = new DBConnection();
 
-    public List<Reward> GetRewardsByEmployeeId(int employeeId)
+    /// <summary>
+    /// Lấy thông tin Reward của một nhân viên (theo employeeId), trả về DataTable.
+    /// </summary>
+    public DataTable LayDanhSachThuongTheoNhanVien(int employeeId)
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            return context.Rewards
-                .Where(r => r.EmployeeID == employeeId)
-                .ToList();
+            var query = from r in context.Rewards
+                        join emp in context.Employees
+                            on r.EmployeeID equals emp.EmployeeID
+                        where r.EmployeeID == employeeId
+                        select new
+                        {
+                            RewardID = r.RewardID,
+                            EmployeeID = r.EmployeeID,
+                            EmployeeName = emp.FullName,
+                            Reason = r.Reason,
+                            RewardDate = r.RewardDate,
+                            Amount = r.Amount ?? 0m
+                        };
+
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Mã Reward", typeof(int));
+            dt.Columns.Add("Mã nhân viên", typeof(int));
+            dt.Columns.Add("Tên nhân viên", typeof(string));
+            dt.Columns.Add("Lý do", typeof(string));
+            dt.Columns.Add("Ngày thưởng", typeof(DateTime));
+            dt.Columns.Add("Số tiền thưởng", typeof(decimal));
+
+            foreach (var item in query)
+            {
+                dt.Rows.Add(
+                    item.RewardID,
+                    item.EmployeeID,
+                    item.EmployeeName,
+                    item.Reason,
+                    item.RewardDate,
+                    item.Amount
+                );
+            }
+
+            return dt;
         }
     }
 

@@ -70,26 +70,11 @@ public class EmployeeEF
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            return context.Employees
-                .Select(e => new Employee
-                {
-                    EmployeeID = e.EmployeeID,
-                    FullName = e.FullName,
-                    BirthDate = e.BirthDate ?? DateTime.MinValue,
-                    Gender = e.Gender ?? "",
-                    Address = e.Address ?? "",
-                    Phone = e.Phone ?? "",
-                    Email = e.Email ?? "",
-                    DepartmentID = e.DepartmentID ?? 0,
-                    PositionID = e.PositionID ?? 0,
-                    HireDate = e.HireDate ?? DateTime.MinValue,
-                    IsProbation = e.IsProbation,
-                    IsFired = e.IsFired,
-                    Password = e.Password ?? ""
-                })
-                .ToList();
+            // Trả về toàn bộ entity Employee, EF sẽ tự materialize ngoặc null thành null
+            return context.Employees.ToList();
         }
     }
+
     public bool InsertEmployee(Employee emp)
     {
         using (var context = new CompanyHRManagementEntities())
@@ -189,27 +174,48 @@ public class EmployeeEF
     }
 
     // chart admin 
+    /// <summary>
+    /// Lấy thống kê số lượng nhân viên theo trạng thái (Đang làm việc / Thử việc / Nghỉ việc)
+    /// Trả về List<Employee> với mỗi phần tử chỉ gán hai trường Status và Count.
+    /// </summary>
+
     public List<Employee> GetEmployeeStatus()
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            var result = context.Employees
+            // Bước 1: Select ra trường Status (anonymous)
+            var temp = context.Employees
                 .Select(e => new
                 {
-                    TrangThai = e.IsFired == true ? "Nghỉ việc" :
-                                e.IsProbation == true ? "Thử việc" : "Đang làm việc"
+                    Status =
+                        e.IsFired == true ? "Nghỉ việc" :
+                        e.IsProbation == true ? "Thử việc" :
+                        "Đang làm việc"
                 })
-                .GroupBy(e => e.TrangThai)
-                .Select(g => new Employee
+                .ToList(); // nhớ viết đầy đủ ToList()
+
+            // Bước 2: GroupBy và Count() (phải gọi g.Count(), không phải g.Count)
+            var raw = temp
+                .GroupBy(x => x.Status)
+                .OrderBy(g => g.Key)   // tùy chọn sắp xếp theo tên trạng thái
+                .Select(g => new
                 {
                     Status = g.Key,
-                    Count = g.Count()
+                    Count = g.Count()   // <-- phải gọi Count() với dấu ()
+                })
+                .ToList();              // nhớ viết đầy đủ ToList()
+
+            // Bước 3: Map về List<Employee>, gán 2 trường Status và Count
+            var result = raw
+                .Select(x => new Employee
+                {
+                    Status = x.Status,
+                    Count = x.Count     // bây giờ x.Count đã là int
                 })
                 .ToList();
 
             return result;
         }
     }
-
 
 }

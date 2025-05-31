@@ -1,27 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Windows.Forms;
 using CompanyHRManagement;
 using CompanyHRManagement.DTO;
 public class DisciplineBUS
 {
-    private DisciplineEF disciplineDAO = new DisciplineEF();
+    private DisciplineEF d = new DisciplineEF();
 
-    public List<Discipline> LayDanhSachPhatTheoNhanVien(int employeeId)
+    public DataTable LayDanhSachPhatTheoNhanVien(int employeeId)
     {
-        return disciplineDAO.GetDisciplinesByEmployeeId(employeeId);
+        return d.LayDanhSachPhatTheoNhanVien(employeeId);
     }
 
     public List<DisciplineDTO> LayDanhSachPhat()
     {
-        return disciplineDAO.GetDisciplinesWithEmployeeName();
+        return d.GetDisciplinesWithEmployeeName();
     }
 
     public List<DisciplineDTO> TimKiemPhat(
         string disciplineID, string fullName, string reason,
         string day, string month, string year, string amount)
     {
-        return disciplineDAO.SearchDisciplines(disciplineID, fullName, reason, day, month, year, amount);
+        return d.SearchDisciplines(disciplineID, fullName, reason, day, month, year, amount);
     }
 
     public bool Themphat(string fullName, string reason, string dayStr, string monthStr, string yearStr, decimal amount, ref string error)
@@ -60,12 +61,12 @@ public class DisciplineBUS
             return false;
         }
 
-        return disciplineDAO.InsertDiscipline(fullName, reason, disciplineDate, amount, ref error);
+        return d.InsertDiscipline(fullName, reason, disciplineDate, amount, ref error);
     }
 
     public bool xoaPhat(List<int> rewardIDs, ref string error)
     {
-        return disciplineDAO.DeleteDisciplinesByIDs(rewardIDs, ref error);
+        return d.DeleteDisciplinesByIDs(rewardIDs, ref error);
     }
 
     public bool CapNhatDiscipline(string disciplineIDStr, string fullName, string reason, string dayStr, string monthStr, string yearStr, decimal amount, ref string error)
@@ -99,6 +100,6 @@ public class DisciplineBUS
             return false;
         }
 
-        return disciplineDAO.UpdateDisciplineByID(disciplineID, fullName, reason, disciplineDate, amount, ref error);
+        return d.UpdateDisciplineByID(disciplineID, fullName, reason, disciplineDate, amount, ref error);
     }
 }

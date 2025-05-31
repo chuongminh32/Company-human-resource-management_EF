@@ -12,7 +12,7 @@ namespace CompanyHRManagement.BUS._ado
     {
         LeaveEF l = new LeaveEF();
         // -- User --
-        public List<Leaf> LayDuLieuNghiPhepTheoIDNhanVien(int idNhanVien)
+        public DataTable LayDuLieuNghiPhepTheoIDNhanVien(int idNhanVien)
         {
             return l.LayDuLieuNghiPhepTheoIDNhanVien(idNhanVien);
         }

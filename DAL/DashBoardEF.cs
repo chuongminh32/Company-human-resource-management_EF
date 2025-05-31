@@ -73,24 +73,23 @@ namespace CompanyHRManagement.DAL._ado
         {
             using (var context = new CompanyHRManagementEntities())
             {
-                var result = context.Attendances
-                    .Where(a => a.EmployeeID == employeeId)
-                    .GroupBy(a => new { a.WorkDate.Month, a.WorkDate.Year })
+                var query = context.Attendances
+                    .Where(a => a.EmployeeID == employeeId && a.WorkDate.HasValue)
+                    .GroupBy(a => new { Month = a.WorkDate.Value.Month, Year = a.WorkDate.Value.Year })
                     .OrderBy(g => g.Key.Year)
                     .ThenBy(g => g.Key.Month)
-                    .Select(g => (
-                        Month: g.Key.Month,
-                        Year: g.Key.Year,
-                        WorkDays: g.Count()
-                    ))
-                    .ToList();
+                    .Select(g => new
+                    {
+                        Month = g.Key.Month,
+                        Year = g.Key.Year,
+                        WorkDays = g.Count()
+                    })
+                    .ToList(); // EF thực thi truy vấn tại đây
 
-                return result;
+                // Chuyển từ anonymous type -> tuple sau khi dữ liệu đã tải về
+                return query.Select(x => (x.Month, x.Year, x.WorkDays)).ToList();
             }
         }
-
-
-
 
     }
 }

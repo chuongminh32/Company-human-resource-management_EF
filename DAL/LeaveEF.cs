@@ -13,15 +13,40 @@ namespace CompanyHRManagement.DAL._ado
     {
         // -- User --
         // ---- user  functions ----
-        public List<Leaf> LayDuLieuNghiPhepTheoIDNhanVien(int EmployeeID)
+        public DataTable LayDuLieuNghiPhepTheoIDNhanVien(int employeeID)
         {
             using (var context = new CompanyHRManagementEntities())
             {
-                return context.Leaves
-                    .Where(l => l.employeeID == EmployeeID)
+                var leaveList = context.Leaves
+                    .Where(l => l.employeeID == employeeID)
                     .ToList();
+
+                // Tạo DataTable
+                DataTable dt = new DataTable();
+                dt.Columns.Add("LeaveID", typeof(int));
+                dt.Columns.Add("EmployeeID", typeof(int));
+                dt.Columns.Add("StartDate", typeof(DateTime));
+                dt.Columns.Add("EndDate", typeof(DateTime));
+                dt.Columns.Add("Reason", typeof(string));
+                dt.Columns.Add("Status", typeof(string));
+
+                // Thêm dữ liệu vào DataTable
+                foreach (var leave in leaveList)
+                {
+                    dt.Rows.Add(
+                        leave.leaveID,
+                        leave.employeeID,
+                        leave.startDate,
+                        leave.endDate,
+                        leave.reason,
+                        leave.status
+                    );
+                }
+
+                return dt;
             }
         }
+
 
         public bool ThemNghiPhep(int EmployeeID, DateTime StartDate, DateTime EndDate, string Reason)
         {
@@ -110,7 +135,7 @@ namespace CompanyHRManagement.DAL._ado
 
             foreach (var p in query)
             {
-                dt.Rows.Add(p.leaveID, p.employeeID,p.EmployeeName, p.startDate, p.endDate, p.reason, p.status);
+                dt.Rows.Add(p.leaveID, p.employeeID, p.EmployeeName, p.startDate, p.endDate, p.reason, p.status);
             }
             return dt;
         }
