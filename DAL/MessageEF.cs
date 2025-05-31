@@ -223,7 +223,7 @@ namespace CompanyHRManagement.DAL._ado
                         context.SaveChanges();
                         return true;
                     }
-                    err = "Message not found";
+                    err = "Không tìm thấy Tin nhắn";
                     return false;
                 }
                 catch (Exception ex)

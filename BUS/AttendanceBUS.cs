@@ -78,9 +78,9 @@ public class AttendanceBUS
     {
         return a.DeleteAttendance(ref err, AttendanceID);
     }
-    public bool UpdateAttendance(DataTable changedData, ref string err)
+    public bool UpdateAttendanceEF(int id, DateTime date, TimeSpan from, TimeSpan to, int overtime, string status, ref string err)
     {
-        return a.UpdateAttendance(changedData, ref err);
+        return a.UpdateAttendanceEF(id,date, from, to, overtime, status, ref err);
     }
     public List<DateTime> GetWorkDates()
     {

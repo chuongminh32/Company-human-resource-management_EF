@@ -71,6 +71,7 @@ public class EmployeeEF
         using (var context = new CompanyHRManagementEntities())
         {
             return context.Employees
+                .AsEnumerable()
                 .Select(e => new Employee
                 {
                     EmployeeID = e.EmployeeID,

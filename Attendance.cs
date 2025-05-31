@@ -21,7 +21,7 @@ namespace CompanyHRManagement
         public Nullable<System.TimeSpan> CheckOut { get; set; }
         public Nullable<int> OvertimeHours { get; set; }
         public string AbsenceStatus { get; set; }
-    
+
         public virtual Employee Employee { get; set; }
     }
 }

@@ -102,11 +102,6 @@ namespace CompanyHRManagement.GUI.admin
             LoadData();
         }
 
-        private void btnLuu_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnXoa_Click(object sender, EventArgs e)
         {
             if (dgvNhanVien.SelectedRows.Count == 0) return;

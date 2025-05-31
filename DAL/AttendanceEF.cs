@@ -142,7 +142,7 @@ public class AttendanceEF
 
         foreach (var p in tps)
         {
-            dt.Rows.Add(p.AttendanceID, p.Employee.FullName, p.EmployeeID, p.WorkDate, p.CheckIn, p.CheckOut, p.AbsenceStatus);
+            dt.Rows.Add(p.AttendanceID, p.EmployeeID, p.Employee.FullName, p.WorkDate, p.CheckIn, p.CheckOut, p.OvertimeHours, p.AbsenceStatus);
         }
         return dt;
     }
@@ -173,7 +173,35 @@ public class AttendanceEF
         x.SaveChanges();
         return true;
     }
-    public bool UpdateAttendance(DataTable changedData, ref string err)
+    public bool UpdateAttendanceEF(int id, DateTime date, TimeSpan from, TimeSpan to, int overtime, string status, ref string err)
+    {
+        using (var context = new CompanyHRManagementEntities())
+        {
+            try
+            {
+                var record = context.Attendances.Find(id);
+                if (record != null)
+                {
+                    record.WorkDate = date;
+                    record.CheckIn = from;
+                    record.CheckOut = to;
+                    record.OvertimeHours = overtime;
+                    record.AbsenceStatus = status;
+                    context.SaveChanges();
+                    return true;
+                }
+                err = "Không tìm thấy bản ghi.";
+                return false;
+            }
+            catch (Exception ex)
+            {
+                err = "Lỗi khi cập nhật: " + ex.Message;
+                return false;
+            }
+        }
+    }
+
+    public bool UpdateAttendances(DataTable changedData, ref string err)
     {
         using (var context = new CompanyHRManagementEntities())
         {

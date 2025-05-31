@@ -677,10 +677,10 @@ namespace CompanyHRManagement.GUI.user
             // Tạo đối tượng mới để cập nhật
             Leaf leave = new Leaf
             {
-                LeaveID = editingLeaveID,
-                Reason = lyDo,
-                StartDate = ngayBatDau,
-                EndDate = ngayKetThuc
+                leaveID = editingLeaveID,
+                reason = lyDo,
+                startDate = ngayBatDau,
+                endDate = ngayKetThuc
             };
 
             // Gọi hàm cập nhật từ BUS

@@ -48,6 +48,6 @@ namespace CompanyHRManagement.BUS._ado
         {
             return m.GetMessageEF();
         }
-
+       
     }
 }
