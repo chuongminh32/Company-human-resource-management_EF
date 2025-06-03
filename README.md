@@ -38,8 +38,15 @@ Hệ thống được phát triển bằng ngôn ngữ **C# WinForms**, sử d�
 - Tự động cập nhật trạng thái hợp đồng hết hạn
 
 
-### Phân công : 
+### Phân chia công việc (3 thành viên)
 - Chương : làm phần user (FE + BE) :D 
+## Chức năng User: 
+	1. Chỉnh sửa thông tin cá nhân
+	2. Xem thông tin nhân viên
+	3. Xem thông tin lương
+	4. Chấm công
+	5. Xin nghỉ phép
+	6. Nhắn tin 
 - Minh + Thùy :
 ##  Minh [1,2] - Giao diện + Backend (Admin)
 
@@ -182,95 +189,72 @@ Viết báo cáo tổng hợp, hướng dẫn sử dụng
 
 ---
 
-## 🧠 Phân chia công việc (3 thành viên)
-
-| Thành viên | Vai trò | Nhiệm vụ |
-|------------|---------|----------|
-| **Chương** | Giao diện user | - Thiết kế giao diện người dùng (WinForms)<br> - Điều hướng Form<br> - Kết nối GUI với tầng nghiệp vụ |
-| **Minh** | Backend – Dữ liệu | - Thiết kế cơ sở dữ liệu<br> - Xây dựng tầng truy xuất dữ liệu (DAL) cho ADO.NET và EF<br> - Tạo Stored Procedure |
-| **Thùy** | Backend – Nghiệp vụ | - Xử lý tính lương, thống kê, tìm kiếm<br> - Viết tầng nghiệp vụ (BUS)<br> - Kết nối dữ liệu với giao diện |
-
-
----
 
 ## 🗂 Cấu trúc thư mục đề xuất
 
-CompanyHRManagement/
+
+# CompanyHRManagement/
 │
-├── GUI/ → Giao diện người dùng (WinForms)
-├── BUS/ → Xử lý nghiệp vụ
-├── DAL/ → Truy xuất dữ liệu 
-├── Models/ → Các lớp đối tượng (POCO classes)
-├── Reports/ → Báo cáo thống kê
-├── Scripts →  tạo CSDL
-└── README.md
-
-- Mẫu đặt tên form
-GUI
-│   ├── frmLogin.cs
-│   ├── frmDashboard.cs
-│   ├── frmEmployee.cs
-│   ├── frmAttendance.cs
-│   ├── frmSalary.cs
-│   └── frmStatistics.cs
-
-
-* CompanyHRManagement/
 │
-├── GUI/                            # Giao diện người dùng (WinForms)
-│   ├── admin/                      
-│   │   └── MainForm.cs
+├── BUS/                       # Tầng nghiệp vụ (Business Logic Layer)
+│   │── AttendanceBUS.cs	   # xử lý dữ liệu chấm công
+│   │── AuthenticationBUS.cs   # xửa lý cho xác thực đăng nhập	
+│   │── DashBoard_adminBUS.cs  # xử lý dữ liệu để hiện lên dashboard admin 
+│   │── DashBoardBUS.cs        # xử lý dữ liệu để hiện lên dashboard user 
+│   │── DepartmentBUS.cs       # xử lý dữ liệu phòng ban 
+│   │── DisciplineBUS.cs       # xử lý dữ liệu phạt 
+│   │── EmployeeBUS.cs         # xử lý dữ liệu nhân viên 
+│   │── LeavesBUS.cs           # xử lý dữ liệu nghỉ phép
+│   │── MessageBUS.cs          # xử lý dữ liệu nhắn tin
+│   │── PositionBUS.cs         # xử lý dữ liệu vị trí chức vụ 
+│   │── RewardBUS.cs           # xử lý dữ liệu khen thưởng 
+│   └── SalaryBUS.cs		   # xử lý dữ liệu lương  
+│    
+│
+├── DAL/                       # Tầng truy xuất dữ liệu (Data Access Layer: Giao tiếp CSDL (chứa DAO)) -  DAO: Data Access Object (	Truy vấn CSDL (chứa SQL))
+│   │── AttendanceEF.cs       # truy xuất dữ liệu chấm công	
+│   │── DashBoard_adminEF.cs  # truy xuất dữ liệu liên quan để hiện lên dashboard admin 
+│   │── DashBoardEF.cs        # truy xuất dữ liệu liên quan để hiện lên dashboard user 
+│   │── DepartmentEF.cs       # truy xuất dữ liệu phòng ban
+│   │── DisciplineEF.cs       # truy xuất dữ liệu phạt 
+│   │── EmployeeEF.cs         # truy xuất dữ liệu nhân viên 
+│   │── LeavesEF.cs           # truy xuất dữ liệu nghỉ phép
+│   │── MessageEF.cs          # truy xuất dữ liệu nhắn tin
+│   │── PositionEF.cs         # truy xuất dữ liệu vị trí chức vụ 
+│   │── RewardEF.cs           # truy xuất dữ liệu khen thưởng
+│   └── SalaryEF.cs		   # truy xuất dữ liệu lương
+│   
+├── GUI/                           # Giao diện người dùng (WinForms)
+│   ├── admin/			           # Giao diện quản trị viên			   
+│   │   |── MainForm_admin.cs      # Giao diện chính cho quản trị viên
+│   │   └── Panel_ChamCong.cs 	   # Giao diện chấm công
+│   │   └── Panel_Luong.cs 	       # Giao diện quản lý lương
+│   │   └── Panel_main.cs          # Giao diện chính của quản trị viên
+│   │   └── Panel_Message.cs       # Giao diện nhắn tin
+│   │   └── Panel_NhanVien.cs      # Giao diện quản lý nhân viên
+│   │   └── Panel_PhongChucVu.cs   # Giao diện quản lý phòng ban và chức vụ
+│   │   └── Panel_ThuongPhat.cs    # Giao diện quản lý khen thưởng và kỷ luật
+│   │   └── ReportSalaries_Form.cs # Giao diện báo cáo lương
 │   │
-│   ├── user/                 
-│   │   └── MainForm.cs
+│   ├── user/					   # Giao diện người dùng thường
+│   │   └── MainForm_user.cs       # Giao diện chính cho người dùng
 │   │
-│   └── Login.cs                   # Giao diện đăng nhập
+│   └── ForgotPassForm.cs          # Giao diện quên mật khẩu
+│   └── LoginForm.cs               # Giao diện đăng nhập
+│   
+├── Models/                      # Lớp thực thể dùng chung
+│   ├── Attendance.cs			 # Lớp mô tả thông tin chấm công	
+│   ├── Department.cs			 # Lớp mô tả thông tin phòng ban
+│   ├── Discipline.cs			 # Lớp mô tả thông tin kỷ luật
+│   ├── Employee.cs 			 # Lớp mô tả thông tin nhân viên
+│   ├── Leave.cs 				 # Lớp mô tả thông tin nghỉ phép
+│   ├── Message.cs 		         # Lớp mô tả thông tin nhắn tin
+│   ├── Position.cs 			 # Lớp mô tả thông tin chức vụ
+│   ├── Reward.cs 			     # Lớp mô tả thông tin khen thưởng
+│   └── Salary.cs 			     # Lớp mô tả thông tin lương
 │
-├── BUS/                           # Tầng nghiệp vụ (Business Logic Layer)
-│   ├── common/                    # Logic dùng chung cho cả ADO & EF (nếu có)
-│   │   ├── SalaryCalculator.cs    # Lớp tính lương, bảo hiểm, thuế...
-│   │   
-│   ├── _ado/                      # Nghiệp vụ sử dụng ADO.NET
-│   │   ├── AttendanceBUS.cs	   # xử lý dữ liệu chấm công
-│   │   ├── AuthenticationBUS.cs   # xửa lý cho xác thực đăng nhập	
-│   │   └── DashBoardBUS.cs        # xử lý dữ liệu để hiện lên dashboard
-│   │   ├── EmployeeBUS.cs         # Xử lý nhân viên
-│   │   ├── LeavesBUS.cs           # Xử lý nghỉ phép
-│   │   └── MessageBUS.cs	       # Xử lý gửi tin nhắn
-│   │   └── SalaryBUS.cs           # Nghiệp vụ xử lý lương
-│   └── _ef/                       # Nghiệp vụ sử dụng Entity Framework
-│       ├── EmployeeBUS.cs
-│       ├── AttendanceBUS.cs
-│       └── SalaryBUS.cs
-│
-├── DAL/                           # Tầng truy xuất dữ liệu (Data Access Layer: Giao tiếp CSDL (chứa DAO)) -  DAO: Data Access Object (	Truy vấn CSDL (chứa SQL))
-│   ├── _ado/                      # Truy xuất dữ liệu bằng ADO.NET
-│   │   ├── AttendanceDAO.cs       # Truy vấn dữ liệu chấm công
-│   │   ├── DashBoardDAO.cs        # Truy vấn dữ liệu cho dashboard
-│   │   ├── DBConnection.cs        # Kết nối DB
-│   │   ├── EmployeeDAO.cs         # Truy vấn dữ liệu nhân viên 
-│   │   ├── LeaveDAO.cs            # Truy vấn dữ liệu nghỉ phép
-│   │   ├── MessageDAO.cs 	       # Truy vấn dữ liệu gửi tin nhắn
-│   │   └── SalaryDAO.cs           # Truy vấn dữ liệu lương
-│   └── _ef/                       # Truy xuất dữ liệu bằng Entity Framework
-│       ├── AppDbContext.cs        # DbContext
-│       ├── EmployeeRepository.cs
-│       ├── AttendanceRepository.cs
-│       └── SalaryRepository.cs
-│
-├── Models/                         # Lớp thực thể dùng chung
-│   ├── Attendance.cs
-│   ├── Employee.cs
-│   ├── Leave.cs
-│   ├── Message.cs
-│   ├── Salary.cs
-│   ├── Bonus.cs
-│   ├── Discipline.cs
-│   └── ...
-│
-├── Reports/                        # File .rdlc hoặc báo cáo Excel
-│   └── IncomeStatistics.rdlc
-│   └── ExportUtils.cs
+├── Reports/                     # File .rdlc hoặc báo cáo Excel
+│   └── RptSalaries.rdlc	     # Báo cáo lương nhân viên
 │
 ├── Resources/                      # Icon, ảnh, file cấu hình
 |
@@ -279,10 +263,16 @@ GUI
 │   └── InitDatabase.sql
 │   └── InsertSampleData.sql
 │   └── StoredProcedures.sql
+|
+├── Utils/                        # Các tiện ích chung
+│   └── EmailHelper.cs            # Hỗ trợ gửi email
+|
 │
 ├── .gitignore                      # Bỏ qua .vs, bin, obj, ...
-├── README.md                       # Mô tả dự án, phân công thành viên
+├── App.config                      # Cấu hình ứng dụng (kết nối CSDL, thư viện)
+├── packages.config                 # Danh sách các package NuGet đã cài đặt
 └── Program.cs                      # Entry point
+├── README.md                       # Mô tả dự án, phân công thành viên
 
 
 
@@ -311,6 +301,6 @@ GUI
 
 ## 📬 Liên hệ nhóm
 
-- Trưởng nhóm: [MinhCHuong] – Email: chuongminh3225@gmail.com
+- Trưởng nhóm: [MinhChuong] – Email: chuongminh3225@gmail.com
 - GitHub: https://github.com/chuongminh32/Company-human-resource-management
 
