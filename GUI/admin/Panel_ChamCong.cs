@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -32,8 +33,10 @@ namespace CompanyHRManagement.GUI.admin
         {
             try
             {
-                dgv_Attendance.DataSource = dbAttendance.GetAttendanceEF();
                 dtAttendance = dbAttendance.GetAttendanceEF();
+dgv_Attendance.DataSource = dtAttendance;
+
+
                 dgv_Leaves.DataSource = dbLeave.GetLeaveEF();
 
                 dgv_Attendance.AutoResizeColumns();
@@ -60,8 +63,6 @@ namespace CompanyHRManagement.GUI.admin
 
                 dgv_Attendance.ReadOnly = !isEdit;
                 dgv_Leaves.ReadOnly = true;
-                //btnChinhSua.Enabled = isEdit;
-                btnLuu.Enabled = isEdit;
                 btnXoa.Enabled = isEdit;
 
                 dgv_Leaves_CellClick(null, null);
@@ -117,7 +118,7 @@ namespace CompanyHRManagement.GUI.admin
             {
                 if (int.TryParse(txtEmployeeID.Text.Trim(), out int empID))
                 {
-                    filter += $"[Mã nhân viên] = {empID}";
+                    filter += $"[Mã nhân viên] = '{empID}'";
                 }
                 else
                 {
@@ -166,6 +167,7 @@ namespace CompanyHRManagement.GUI.admin
             LoadData();
             LoadDate();
             CalculateAndDisplaySummary();
+
         }
 
         private void cbSelectDate_SelectedIndexChanged(object sender, EventArgs e)
@@ -178,7 +180,7 @@ namespace CompanyHRManagement.GUI.admin
             if (dgv_Leaves.CurrentRow == null) return;
 
             int leaveID = Convert.ToInt32(txtID.Text);
-            int employeeID = Convert.ToInt32(dgv_Leaves.CurrentRow.Cells["EmployeeID"].Value);
+            int employeeID = Convert.ToInt32(dgv_Leaves.CurrentRow.Cells["Mã"].Value);
 
             if (dbLeave.UpdateLeaveStatus(leaveID, "Chấp nhận"))
             {
@@ -202,7 +204,7 @@ namespace CompanyHRManagement.GUI.admin
             if (dgv_Leaves.CurrentRow == null) return;
 
             int leaveID = Convert.ToInt32(txtID.Text);
-            int employeeID = Convert.ToInt32(dgv_Leaves.CurrentRow.Cells["EmployeeID"].Value);
+            int employeeID = Convert.ToInt32(dgv_Leaves.CurrentRow.Cells["Mã"].Value);
 
             if (dbLeave.UpdateLeaveStatus(leaveID, "Từ chối"))
             {
@@ -251,7 +253,6 @@ namespace CompanyHRManagement.GUI.admin
 
             // Update button states
             btnChinhSua.Text = isEdit ? "Dừng chỉnh sửa" : "Chỉnh sửa";
-            btnLuu.Enabled = isEdit;
             btnXoa.Enabled = isEdit;
 
             dgv_Attendance.ReadOnly = !isEdit;
@@ -259,47 +260,6 @@ namespace CompanyHRManagement.GUI.admin
             if (!isEdit)
             {
                 LoadData();
-            }
-        }
-
-        private void btnLuu_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                dgv_Attendance.EndEdit();
-
-                // Get changes from the DataTable
-                DataTable changes = dtAttendance.GetChanges(DataRowState.Modified);
-
-                if (changes != null && changes.Rows.Count > 0)
-                {
-                    string err = string.Empty;
-                    if (dbAttendance.UpdateAttendance(changes, ref err))
-                    {
-                        MessageBox.Show("Lưu dữ liệu thành công!");
-                        dtAttendance.AcceptChanges();
-                        LoadData();
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Lỗi khi lưu dữ liệu: {err}");
-                        dtAttendance.RejectChanges();
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Không có thay đổi nào để lưu!");
-                }
-                // Exit edit mode
-                isEdit = false;
-                btnChinhSua.Text = "Chỉnh sửa";
-                btnLuu.Enabled = false;
-                btnXoa.Enabled = false;
-                dgv_Attendance.ReadOnly = true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi khi lưu dữ liệu: {ex.Message}");
             }
         }
 
@@ -311,7 +271,7 @@ namespace CompanyHRManagement.GUI.admin
                 return;
             }
 
-            int attendanceID = Convert.ToInt32(dgv_Attendance.CurrentRow.Cells["AttendanceID"].Value);
+            int attendanceID = Convert.ToInt32(dgv_Attendance.CurrentRow.Cells["Mã"].Value);
 
             if (MessageBox.Show("Bạn có chắc chắn muốn xóa bản ghi này?", "Xác nhận",
                 MessageBoxButtons.YesNo) == DialogResult.Yes)
@@ -373,6 +333,89 @@ namespace CompanyHRManagement.GUI.admin
         private void btnReload_Click(object sender, EventArgs e)
         {
             LoadData();
+        }
+        private static bool ShowEditAttendanceDialog(ref DateTime workingDate,ref TimeSpan from,ref TimeSpan to,ref int overtime,ref string status)
+        {
+            Form prompt = new Form()
+            {
+                Width = 400,
+                Height = 280,
+                Text = "Chỉnh sửa chấm công",
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                StartPosition = FormStartPosition.CenterScreen,
+                MinimizeBox = false,
+                MaximizeBox = false
+            };
+
+            // Labels
+            Label lblDate = new Label() { Left = 20, Top = 20, Text = "Ngày làm", AutoSize = true };
+            Label lblFrom = new Label() { Left = 20, Top = 60, Text = "Từ (hh:mm)", AutoSize = true };
+            Label lblTo = new Label() { Left = 200, Top = 60, Text = "Đến (hh:mm)", AutoSize = true };
+            Label lblOT = new Label() { Left = 20, Top = 100, Text = "Tăng ca (giờ)", AutoSize = true };
+            Label lblStatus = new Label() { Left = 20, Top = 140, Text = "Trạng thái", AutoSize = true };
+
+            // Controls
+            DateTimePicker dtpDate = new DateTimePicker() { Left = 120, Top = 16, Width = 240, Value = workingDate };
+            TextBox txtFrom = new TextBox() { Left = 90, Top = 56, Width = 80, Text = from.ToString(@"hh\:mm") };
+            TextBox txtTo = new TextBox() { Left = 260, Top = 56, Width = 80, Text = to.ToString(@"hh\:mm") };
+            TextBox txtOT = new TextBox() { Left = 120, Top = 96, Width = 100, Text = overtime.ToString() };
+            TextBox txtStatus = new TextBox() { Left = 120, Top = 136, Width = 240, Text = status };
+
+            Button btnSave = new Button() { Text = "Lưu", Left = 270, Width = 90, Top = 190, DialogResult = DialogResult.OK };
+
+            // Add controls
+            prompt.Controls.AddRange(new Control[] {lblDate, dtpDate, lblFrom, txtFrom, lblTo, txtTo, lblOT, txtOT, lblStatus, txtStatus, btnSave });
+
+            prompt.AcceptButton = btnSave;
+
+            if (prompt.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    workingDate = dtpDate.Value.Date;
+                    from = TimeSpan.Parse(txtFrom.Text);
+                    to = TimeSpan.Parse(txtTo.Text);
+                    overtime = int.Parse(txtOT.Text);
+                    status = txtStatus.Text;
+                    return true;
+                }
+                catch
+                {
+                    MessageBox.Show("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại định dạng!");
+                    return false;
+                }
+            }
+
+            return false;
+        }
+
+        private void dgv_Attendance_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0 || !isEdit) return;
+            var Id = Convert.ToInt32(dgv_Attendance.Rows[e.RowIndex].Cells["Mã"].Value);
+
+            DateTime ngayLam = Convert.ToDateTime(dgv_Attendance.Rows[e.RowIndex].Cells["Ngày làm"].Value);
+            TimeSpan tu = TimeSpan.Parse(dgv_Attendance.Rows[e.RowIndex].Cells["Từ"].Value.ToString());
+            TimeSpan den = TimeSpan.Parse(dgv_Attendance.Rows[e.RowIndex].Cells["Đến"].Value.ToString());
+            int tangCa = Convert.ToInt32(dgv_Attendance.Rows[e.RowIndex].Cells["Tăng ca"].Value);
+            string trangThai = dgv_Attendance.Rows[e.RowIndex].Cells["Trạng thái"].Value.ToString();
+
+            if (isEdit)
+            {
+                ShowEditAttendanceDialog(ref ngayLam, ref tu, ref den, ref tangCa, ref trangThai);
+                string err = "";
+                bool success = dbAttendance.UpdateAttendanceEF(Id, ngayLam, tu, den, tangCa, trangThai, ref err);
+
+                if (success)
+                {
+                    MessageBox.Show("Cập nhật thông tin chấm công thành công!");
+                    LoadData();
+                }
+                else
+                {
+                    MessageBox.Show("Cập nhật thất bại: " + err);
+                }
+            }
         }
     }
 }

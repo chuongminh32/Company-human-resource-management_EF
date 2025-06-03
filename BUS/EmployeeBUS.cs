@@ -22,9 +22,9 @@ public class EmployeeBUS
     {
         return e.GetAllEmployeesEF();
     }
-    public bool InsertEmployee(Employee emp)
+    public bool InsertEmployee(Employee emp, ref string err)
     {
-        return e.InsertEmployee(emp);
+        return e.InsertEmployee(emp, ref err);
     }
     public bool DeleteEmployee(int empID)
     {

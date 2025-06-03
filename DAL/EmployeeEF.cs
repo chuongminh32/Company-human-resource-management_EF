@@ -4,6 +4,10 @@ using System.Data;
 using System.Linq;
 using System.Data.SqlClient;
 using CompanyHRManagement;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Engineering;
+using System.Data.Entity.Infrastructure;
+using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 public class EmployeeEF
 {
@@ -70,34 +74,100 @@ public class EmployeeEF
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            // Trả về toàn bộ entity Employee, EF sẽ tự materialize ngoặc null thành null
-            return context.Employees.ToList();
+            return context.Employees
+                .AsEnumerable()
+                .Select(e => new Employee
+                {
+                    EmployeeID = e.EmployeeID,
+                    FullName = e.FullName,
+                    BirthDate = e.BirthDate ?? DateTime.MinValue,
+                    Gender = e.Gender ?? "",
+                    Address = e.Address ?? "",
+                    Phone = e.Phone ?? "",
+                    Email = e.Email ?? "",
+                    DepartmentID = e.DepartmentID ?? 0,
+                    PositionID = e.PositionID ?? 0,
+                    HireDate = e.HireDate ?? DateTime.MinValue,
+                    IsProbation = e.IsProbation,
+                    IsFired = e.IsFired,
+                    Password = e.Password ?? ""
+                })
+                .ToList();
+   // Trả về toàn bộ entity Employee, EF sẽ tự materialize ngoặc null thành null
+       //     return context.Employees.ToList();
+
         }
     }
 
-    public bool InsertEmployee(Employee emp)
+    public bool InsertEmployee(Employee emp,ref string errorMessage)
     {
         using (var context = new CompanyHRManagementEntities())
         {
-            var newEmployee = new Employee
+            try
             {
-                FullName = emp.FullName,
-                BirthDate = emp.BirthDate,
-                Gender = emp.Gender,
-                Address = emp.Address,
-                Phone = emp.Phone,
-                Email = emp.Email,
-                DepartmentID = emp.DepartmentID,
-                PositionID = emp.PositionID,
-                HireDate = emp.HireDate,
-                IsProbation = emp.IsProbation,
-                IsFired = emp.IsFired,
-                Password = emp.Password
-            };
+                if (!context.Departments.Any(d => d.DepartmentID == emp.DepartmentID))
+                {
+                    MessageBox.Show("Mã phòng ban không hợp lệ!", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                if (!context.Positions.Any(p => p.PositionID == emp.PositionID))
+                {
+                    MessageBox.Show("Mã chức vụ không hợp lệ!", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                var normalizedGender = emp.Gender.Trim().ToLower();
+                if (normalizedGender != "nam" && normalizedGender != "nữ")
+                {
+                    MessageBox.Show("GT không hợp lệ. Vui lòng điền Nam hoặc Nữ!", "Lỗi định dạng", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                if (!emp.IsProbation.HasValue)
+                {
+                    MessageBox.Show("Trạng thái thử việc chưa được thiết lập!","Lỗi dữ liệu",MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                if (!emp.IsFired.HasValue)
+                {
+                    MessageBox.Show("Trạng thái nghỉ việc chưa được thiết lập!", "Lỗi dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                if (!Regex.IsMatch(emp.Phone, @"^0\d{9}$"))
+                {
+                    MessageBox.Show("Số điện thoại không hợp lệ! Phải bắt đầu bằng 0 và có đúng 10 chữ số","Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
 
-            context.Employees.Add(newEmployee);
-            int rowsAffected = context.SaveChanges();
-            return rowsAffected > 0;
+                var newEmployee = new Employee
+                {
+                    FullName = emp.FullName,
+                    BirthDate = emp.BirthDate,
+                    Gender = emp.Gender,
+                    Address = emp.Address,
+                    Phone = emp.Phone,
+                    Email = emp.Email,
+                    DepartmentID = emp.DepartmentID,
+                    PositionID = emp.PositionID,
+                    HireDate = emp.HireDate,
+                    IsProbation = emp.IsProbation,
+                    IsFired = emp.IsFired,
+                    Password = emp.Password
+                };
+                context.Employees.Add(newEmployee);
+                int rowsAffected = context.SaveChanges();
+                return rowsAffected > 0;
+
+            }
+            catch (DbUpdateException dbEx)
+            {
+                errorMessage = "Lỗi khi thêm dữ liệu: " + dbEx.InnerException?.InnerException?.Message ?? dbEx.Message;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Lỗi hệ thống: " + ex.Message;
+                return false;
+            }
+
         }
     }
     public bool DeleteEmployee(int empID)

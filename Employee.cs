@@ -40,7 +40,7 @@ namespace CompanyHRManagement
         public Nullable<bool> IsFired { get; set; }
         public string Password { get; set; }
 
-        // ========= Thêm 2 trường tạm để lưu kết quả thống kê =========
+
         [NotMapped]
         public string Status { get; set; }
 

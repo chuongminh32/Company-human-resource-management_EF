@@ -8,7 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using CompanyHRManagement.DAL;
+using CompanyHRManagement.BUS;
+using CompanyHRManagement.BUS._ado;
 using CompanyHRManagement.DAL._ado;
 
 namespace CompanyHRManagement.GUI.admin
@@ -19,8 +20,8 @@ namespace CompanyHRManagement.GUI.admin
         DataTable TNMoi = null;
         String err = null;
 
-        MessageEF dbMess = new MessageEF();
-        EmployeeEF dbEmp = new EmployeeEF();
+        MessageBUS dbMess = new MessageBUS();
+        EmployeeBUS dbEmp = new EmployeeBUS();
 
         public Panel_Message()
         {
@@ -38,7 +39,7 @@ namespace CompanyHRManagement.GUI.admin
                 dgvMess.ReadOnly = true;
                 dgvMess.DefaultCellStyle.Font = new Font("Segoe UI", 11);
                 dgvMess.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 11, FontStyle.Bold);
-
+                dgvMess.AllowUserToAddRows = false;
 
                 if (!dgvMess.Columns.Contains("colEdit"))
                 {
@@ -118,12 +119,16 @@ namespace CompanyHRManagement.GUI.admin
 
         private void dgvLSTin_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex < 0) return;
-            var messageId = Convert.ToInt32(dgvMess.Rows[e.RowIndex].Cells[0].Value);
+            if (e.RowIndex < 0 || e.RowIndex >= dgvMess.Rows.Count - 1) return;
+            if (dgvMess.Rows[e.RowIndex].Cells["Mã"].Value == null ||dgvMess.Rows[e.RowIndex].Cells["Mã"].Value == DBNull.Value)
+            {
+                return;
+            }
+            var messageId = Convert.ToInt32(dgvMess.Rows[e.RowIndex].Cells["Mã"].Value);
 
             if (dgvMess.Columns[e.ColumnIndex].Name == "colEdit")
             {
-                string oldContent = dgvMess.Rows[e.RowIndex].Cells[4].Value.ToString();
+                string oldContent = dgvMess.Rows[e.RowIndex].Cells["Nội dung"].Value.ToString();
                 string newContent = ShowDialog("Sửa nội dung:", oldContent);
 
                 if (!string.IsNullOrWhiteSpace(newContent))

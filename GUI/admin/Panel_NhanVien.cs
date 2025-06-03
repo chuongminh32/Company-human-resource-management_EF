@@ -102,11 +102,6 @@ namespace CompanyHRManagement.GUI.admin
             LoadData();
         }
 
-        private void btnLuu_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnXoa_Click(object sender, EventArgs e)
         {
             if (dgvNhanVien.SelectedRows.Count == 0) return;
@@ -188,7 +183,7 @@ namespace CompanyHRManagement.GUI.admin
                 IsFired = txtIsFired.Text == "1",
                 Password = txtPassword.Text
             };
-            if (dbEm.InsertEmployee(emp))
+            if (dbEm.InsertEmployee(emp, ref err))
             {
                 MessageBox.Show("Thêm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 LoadData();

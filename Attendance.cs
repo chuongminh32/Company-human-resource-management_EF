@@ -22,12 +22,13 @@ namespace CompanyHRManagement
         public Nullable<System.TimeSpan> CheckOut { get; set; }
         public Nullable<int> OvertimeHours { get; set; }
         public string AbsenceStatus { get; set; }
-        // Hai thuộc tính để phục vụ kết quả tổng hợp
+
         [NotMapped]
         public string MonthYear { get; set; }
 
         [NotMapped]
         public int WorkDays { get; set; }
+
         public virtual Employee Employee { get; set; }
     }
 }
